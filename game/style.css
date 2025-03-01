@@ -27,11 +27,12 @@ button {
     background-color: #4CAF50;
     color: white;
     padding: 10px 20px;
-    margin: 20px 0;
+    margin: 10px; /* Reduced margin for buttons to look better centered */
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    display: inline-block; /* Ensure buttons are inline-block for text-align to work */
 }
 
 button:hover {
@@ -51,8 +52,7 @@ button:hover {
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: left; /* Keep the text aligned to the left */
-    text-align: center; /* Add this line to center the buttons */
+    text-align: center; /* Add this line to center content */
 }
 
 .hidden {
