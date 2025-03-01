@@ -51,7 +51,8 @@ button:hover {
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: left;
+    text-align: left; /* Keep the text aligned to the left */
+    text-align: center; /* Add this line to center the buttons */
 }
 
 .hidden {
