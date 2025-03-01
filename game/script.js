@@ -175,7 +175,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
      const alternateScriptTemplate = `
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
 
-              Everything Trump is doing is extremely worrying and f*cked. You, as my Senator, as a person who represents my, should do more to stop this madness.<br><br>
+              Everything Trump is doing is extremely worrying and f*cked. You, as my Senator, as a person who represents me, should do more to stop this madness.<br><br>
 
               I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to finally do something.<br><br>
 
