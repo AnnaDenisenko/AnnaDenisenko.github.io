@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const senatorsData = `
-VANCE, J. D. 4-2424
 ALSOBROOKS, Angela D. (D-MD) SD-B40E 4-4524
 BALDWIN, Tammy (D-WI) SH-141 4-5653
 BANKS, Jim (R-IN) SR-B85 4-4814
@@ -72,7 +71,7 @@ KAINE, Tim (D-VA) SR-231 4-4024
 KELLY, Mark (D-AZ) SH-516 4-2235
 KENNEDY, John (R-LA) SR-437 4-4623
 KIM, Andy (D-NJ) SD-B40D 4-4744
-KING, Jr., Angus S. (I-ME) SH-133 4-5344
+KING, Angus S. (I-ME) SH-133 4-5344
 KLOBUCHAR, Amy (D-MN) SD-425 4-3244
 LANKFORD, James (R-OK) SH-731 4-5754
 LEE, Mike (R-UT) SR-363 4-5444
