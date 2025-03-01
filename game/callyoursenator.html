@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senate Phone Call Game</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Basic modal styles (customize as needed) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 2; /* Above the main content */
+        }
+        /* Style for call counter and history */
+        #callCounterAndHistory {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #callHistoryList {
+            list-style: none;
+            padding: 0;
+            margin: 10px auto;
+            width: 80%;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #callHistoryList li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Senate Phone Call Game</h1>
+        <button id="getContactButton">Get a Senator!</button>
+
+        <div id="contactInfo" class="hidden">
+            <h2>Call your senator</h2>
+            <p id="senatorName">Senator:</p>
+            <p id="senatorPhone">Phone:</p>
+            <p id="senatorBuilding">Location:</p>
+        </div>
+
+        <div id="scriptContainer" class="hidden">
+            <h2>Phone Script</h2>
+            <p id="phoneScript">
+              My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
+
+              I am calling to express my deep concern regarding potential changes in U.S. policy that could lead to a reduction of military aid to Ukraine. <br><br>
+
+              U.S. assistance is vital for Ukraine's ability to defend itself and its people against the ongoing Russian invasion. <br><br>
+
+              A reduction in aid would significantly weaken Ukraine's defenses, leading to dire humanitarian consequences, further enabling Russia's aggression, which has already caused immense suffering and violated international law. <br><br>
+
+              It is crucial that the United States continues to clearly and firmly oppose Russia's illegal invasion and support Ukraine's right to exist as a free and independent nation.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world, about where the U.S. stands on these fundamental issues.<br><br>
+
+              I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to strongly advocate for the continuation and strengthening of U.S. assistance to Ukraine.  It is an investment in peace, security, and the democratic values we share. <br><br>
+
+              Thank you for your time and consideration of this urgent matter. I would greatly appreciate it if you would relay my message to Senator <span id="lastNamePlaceholder2">[Last Name]</span>.
+            </p>
+            <button id="callCompletedButton">I Made the Call!</button>
+            <button id="alternateScriptButton">This Script Isn't Right for Me</button>
+        </div>
+
+        <div id="fireworksContainer" class="fireworks-container"></div>
+
+        <div id="callAgainModal" class="modal">
+            <div class="modal-content">
+                <p>Want to make another call?</p>
+                <button id="callAgainButton">Yes!</button>
+            </div>
+        </div>
+
+        <div id="callCounterAndHistory">
+            <p>You have called <span id="callCount">0</span> senators!</p>
+            <h3>Call History:</h3>
+            <ul id="callHistoryList"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
+</body>
+</html>
