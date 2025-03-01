@@ -32,7 +32,7 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    display: inline-block; /* Ensure buttons are inline-block for text-align to work */
+    display: inline-block; /* Ensure buttons are inline-block */
 }
 
 button:hover {
@@ -52,8 +52,14 @@ button:hover {
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: center; /* Add this line to center content */
+    text-align: left; /* REMOVED text-align: center; from here */
 }
+
+.button-container {         /* NEW CSS RULE FOR BUTTON CONTAINER */
+    text-align: center;      /* Center the content (buttons) inside this container */
+    margin-top: 15px;      /* Add some space above the buttons */
+}
+
 
 .hidden {
     display: none;
