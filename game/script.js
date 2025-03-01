@@ -184,13 +184,13 @@ YOUNG, Todd (R-IN) SD-185 4-5623
     const originalScriptTemplate = `
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
 
-              I am calling to express my deep concern regarding potential changes in U.S. policy that could lead to a reduction of military aid to Ukraine. <br><br>
+              I am calling to express my deep concern about potential shifts in U.S. foreign policy, specifically the proposed halt of military aid to Ukraine.<br><br>
 
-              U.S. assistance is vital for Ukraine's ability to defend itself and its people against the ongoing Russian invasion. <br><br>
+              American aid is Ukraine's lifeline against Russia's brutal invasion.  To cut it is to cripple their defense. <br><br>
 
-              A reduction in aid would significantly weaken Ukraine's defenses, leading to dire humanitarian consequences, further enabling Russia's aggression, which has already caused immense suffering and violated international law. <br><br>
+              Reduced aid guarantees a weaker Ukraine, unleashing humanitarian catastrophe and emboldening Russia's lawless aggression. The cost in lives and global order is unthinkable.<br><br>
 
-              It is crucial that the United States continues to clearly and firmly oppose Russia's illegal invasion and support Ukraine's right to exist as a free and independent nation.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world, about where the U.S. stands on these fundamental issues.<br><br>
+              The U.S. must stand resolute against Russia's illegal war and for Ukraine's sovereign right to exist.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world.<br><br>
 
               I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to strongly advocate for the continuation and strengthening of U.S. assistance to Ukraine.  It is an investment in peace, security, and the democratic values we share. <br><br>
 
