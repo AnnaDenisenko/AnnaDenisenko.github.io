@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const callCountSpan = document.getElementById('callCount');
     const callHistoryList = document.getElementById('callHistoryList');
 
-    let senators = [];
-    let calledSenators = [];
+    let senators = []; // Will be populated from senatorsData
+    let calledSenators = []; // Array to store senators who have been called - not directly used for persistence in this version, callHistoryList is used instead
     let callCount = 0;
 
     const senatorsData = `
@@ -122,7 +122,7 @@ WHITEHOUSE, Sheldon (D-RI) SH-530 4-2921
 WICKER, Roger F. (R-MS) SR-425 4-6253
 WYDEN, Ron (D-OR) SD-221 4-5244
 YOUNG, Todd (R-IN) SD-185 4-5623
-`;
+    `;
 
     const alternateScriptTemplate = `
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
@@ -177,65 +177,82 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         return senatorsArray;
     }
 
+
     const jsConfetti = new JSConfetti();
 
+    // Function to save game state to local storage
     function saveGameState() {
-        localStorage.setItem('callCount', JSON.stringify(callCount));
-        // Store call history as an array of strings (senator names)
-        const historyItems = [];
-        callHistoryList.querySelectorAll('li').forEach(item => historyItems.push(item.textContent));
-        localStorage.setItem('callHistory', JSON.stringify(historyItems));
-        localStorage.setItem('senators', JSON.stringify(senators));
-        localStorage.setItem('scriptVersion', scriptContainerDiv.dataset.scriptVersion); // Save script version
-    }
+    localStorage.setItem('callCount', JSON.stringify(callCount));
 
+    // Get an array of senator names from the call history list items
+    const historyItems = Array.from(callHistoryList.children); // Convert HTMLCollection to Array
+    const callHistoryNames = historyItems.map(item => item.textContent); // Extract text content
+    localStorage.setItem('callHistoryNames', JSON.stringify(callHistoryNames)); // Save the array of names
+
+    localStorage.setItem('senators', JSON.stringify(senators));
+    localStorage.setItem('lastSenator', JSON.stringify(currentSenator));
+    localStorage.setItem('scriptVersion', JSON.stringify(scriptContainerDiv.dataset.scriptVersion)); // Save script version
+}
+
+    // Function to load game state from local storage
     function loadGameState() {
-        const storedCallCount = localStorage.getItem('callCount');
-        const storedCallHistory = localStorage.getItem('callHistory');
-        const storedSenators = localStorage.getItem('senators');
-        const storedScriptVersion = localStorage.getItem('scriptVersion');
+    const storedCallCount = localStorage.getItem('callCount');
+    const storedCallHistoryNames = localStorage.getItem('callHistoryNames'); // Get the array of names
+    const storedSenators = localStorage.getItem('senators');
+    const storedScriptVersion = localStorage.getItem('scriptVersion');
+    const lastSenatorData = localStorage.getItem('lastSenator');
 
-        if (storedCallCount) {
+
+    if (storedCallCount) {
             callCount = JSON.parse(storedCallCount);
             callCountSpan.textContent = callCount;
         }
-        if (storedCallHistory) {
-            const historyItems = JSON.parse(storedCallHistory);
-            callHistoryList.innerHTML = ''; // Clear existing list
-            historyItems.forEach(itemText => { // Recreate list items from stored text
+
+        if (storedCallHistoryNames) {
+            const callHistoryNames = JSON.parse(storedCallHistoryNames); // Parse the array of names
+            callHistoryList.innerHTML = ''; // Clear the existing list
+
+            // Reconstruct the list from the array of names
+            callHistoryNames.forEach(name => {
                 const listItem = document.createElement('li');
-                listItem.textContent = itemText;
+                listItem.textContent = name; // Set textContent directly from the name string
                 callHistoryList.appendChild(listItem);
             });
         }
+
+
         if (storedSenators) {
-            senators = JSON.parse(storedSenators); // Load senators directly from stored data
+            senators = parseSenators(senatorsData).filter(senator => {
+                const storedSenatorsArray = JSON.parse(storedSenators);
+                return !storedSenatorsArray.some(storedSenator => storedSenator.fullName === senator.fullName);
+            });
         } else {
             senators = parseSenators(senatorsData);
         }
-        if (storedScriptVersion) {
-            scriptContainerDiv.dataset.scriptVersion = storedScriptVersion;
-        } else {
-            scriptContainerDiv.dataset.scriptVersion = "1"; // Default script version
-        }
-        if (callCount > 0 && callHistoryList.children.length > 0) {
+
+         if (lastSenatorData) {
             displayLastSenatorInfo();
         }
-        applyScriptVersion(); // Apply script version after loading
+         if (storedScriptVersion) {
+            scriptContainerDiv.dataset.scriptVersion = JSON.parse(storedScriptVersion);
+        }
     }
 
-    function displayLastSenatorInfo() {
+     function displayLastSenatorInfo() {
         const lastSenatorData = JSON.parse(localStorage.getItem('lastSenator'));
         if (lastSenatorData) {
             senatorNamePara.textContent = `Senator: ${lastSenatorData.fullName} (${lastSenatorData.party}-${lastSenatorData.state})`;
             senatorPhonePara.textContent = `Phone: ${lastSenatorData.phone}`;
             senatorBuildingPara.textContent = `Location: ${lastSenatorData.building}`;
-            currentSenator = lastSenatorData;
-            applyScriptVersion(); // Apply script version after loading last senator info
+            phoneScriptPara.innerHTML = scriptContainerDiv.dataset.scriptVersion === "2"
+                ? alternateScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName)
+                : originalScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
             contactInfoDiv.classList.remove('hidden');
             scriptContainerDiv.classList.remove('hidden');
+            currentSenator = lastSenatorData; // Restore currentSenator
         }
     }
+
 
     function displaySenator() {
         contactInfoDiv.classList.add('hidden');
@@ -243,7 +260,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
 
         if (senators.length === 0) {
             alert("You've contacted all the senators! Thank you!");
-            return null;
+            return null; // Indicate no senator to display
         }
 
         const randomIndex = Math.floor(Math.random() * senators.length);
@@ -252,27 +269,18 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         senatorNamePara.textContent = `Senator: ${senator.fullName} (${senator.party}-${senator.state})`;
         senatorPhonePara.textContent = `Phone: ${senator.phone}`;
         senatorBuildingPara.textContent = `Location: ${senator.building}`;
-        currentSenator = senator; // Set currentSenator here
-        applyScriptVersion(); // Apply script version when displaying new senator
+        phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, senator.lastName);
+        scriptContainerDiv.dataset.scriptVersion = "1";
 
         contactInfoDiv.classList.remove('hidden');
         scriptContainerDiv.classList.remove('hidden');
 
-        senators.splice(randomIndex, 1);
-        localStorage.setItem('senators', JSON.stringify(senators));
-        localStorage.setItem('lastSenator', JSON.stringify(senator));
-        saveGameState();
+        senators.splice(randomIndex, 1); // Remove the displayed senator
+        localStorage.setItem('senators', JSON.stringify(senators)); // Update senators in local storage
+        localStorage.setItem('lastSenator', JSON.stringify(senator)); // Save last senator's info
+        saveGameState(); // Save the updated game state
 
         return senator;
-    }
-
-    function applyScriptVersion() {
-        const scriptVersion = scriptContainerDiv.dataset.scriptVersion;
-        if (scriptVersion === "2") {
-            phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
-        } else {
-            phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
-        }
     }
 
 
@@ -285,18 +293,19 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
         callHistoryList.appendChild(listItem);
 
-        saveGameState();
+        saveGameState(); // Save game state after call completion
         callAgainModal.style.display = "block";
     });
 
     alternateScriptButton.addEventListener('click', () => {
         if (scriptContainerDiv.dataset.scriptVersion === "1") {
+            phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
             scriptContainerDiv.dataset.scriptVersion = "2";
         } else {
+            phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
             scriptContainerDiv.dataset.scriptVersion = "1";
         }
-        applyScriptVersion(); // Apply script version on button click
-        saveGameState();
+        saveGameState(); // Save game state after script change, though not strictly necessary as call count/history doesn't change
     });
 
     callAgainButton.addEventListener('click', () => {
@@ -304,12 +313,16 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
         const senator = displaySenator();
+        currentSenator = senator;
     });
 
     let currentSenator;
+
+    // Load game state on initial page load
     loadGameState();
 
     getContactButton.addEventListener('click', () => {
-        displaySenator();
+        const senator = displaySenator();
+        currentSenator = senator;
     });
 });
