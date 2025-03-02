@@ -52,8 +52,9 @@ button:hover {
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    text-align: left; /* REMOVED text-align: center; from here */
+    text-align: left;
 }
+
 
 .button-container {         /* NEW CSS RULE FOR BUTTON CONTAINER */
     text-align: center;      /* Center the content (buttons) inside this container */
@@ -63,4 +64,38 @@ button:hover {
 
 .hidden {
     display: none;
+}
+
+/* Style for filter dropdown */
+#senatorFilterDropdown {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+}
+
+#badgeContainer {
+    display: inline-block; /* Display badges horizontally */
+    margin-left: 10px; /* Space between count and badges */
+    vertical-align: middle; /* Align with the text */
+}
+
+.badge {
+    display: inline-block;
+    width: 20px; /* Adjust badge size as needed */
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    font-size: 14px;
+    background-color: gold; /* Example badge style */
+    color: black;
+    border-radius: 50%; /* Make it circular */
+    margin-right: 5px; /* Space between badges */
+}
+ .badge-emoji {
+    font-size: 24px; /* Adjust emoji size */
+    display: inline-block; /* Display badges horizontally */
+    margin-right: 5px; /* Space between badges */
+    vertical-align: middle; /* Align with the text */
 }
