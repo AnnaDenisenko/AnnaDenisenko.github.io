@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>From Couch to Capitol</title>
+    <title>Senate Phone Call Game</title>
     <link rel="stylesheet" href="style.css">
     <style>
         /* Basic modal styles (customize as needed) */
@@ -54,12 +54,56 @@
         #callHistoryList li {
             margin-bottom: 5px;
         }
+
+        /* Style for filter dropdown */
+        #senatorFilterDropdown {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+
+        /* Style for badges */
+        #badgeContainer {
+            display: inline-block; /* Display badges horizontally */
+            margin-left: 10px; /* Space between count and badges */
+            vertical-align: middle; /* Align with the text */
+        }
+
+        .badge {
+            display: inline-block;
+            width: 20px; /* Adjust badge size as needed */
+            height: 20px;
+            line-height: 20px;
+            text-align: center;
+            font-size: 14px;
+            background-color: gold; /* Example badge style */
+            color: black;
+            border-radius: 50%; /* Make it circular */
+            margin-right: 5px; /* Space between badges */
+        }
+         .badge-emoji {
+            font-size: 24px; /* Adjust emoji size */
+            display: inline-block; /* Display badges horizontally */
+            margin-right: 5px; /* Space between badges */
+            vertical-align: middle; /* Align with the text */
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>From Couch to Capitol</h1>
+        <h1>Senate Phone Call Game</h1>
         <button id="getContactButton">Get a Senator!</button>
+
+        <div class="filter-dropdown">
+            <label for="senatorFilterDropdown">Filter Senators:</label>
+            <select id="senatorFilterDropdown">
+                <option value="all">Show All Senators</option>
+                <option value="republican">Republican Senators Only</option>
+                <option value="democrat">Democratic Senators Only</option>
+            </select>
+        </div>
 
         <div id="contactInfo" class="hidden">
             <h2>Call your senator</h2>
@@ -73,22 +117,24 @@
             <p id="phoneScript">
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
 
-              I am calling to express my deep concern regarding potential changes in U.S. policy that could lead to a reduction of military aid to Ukraine. <br><br>
+              I'm calling to express my deep concern regarding statements made about potentially reducing or eliminating U.S. aid to Ukraine. The consequences of such a policy shift are extremely worrying.<br><br>
 
-              U.S. assistance is vital for Ukraine's ability to defend itself and its people against the ongoing Russian invasion. <br><br>
+              A reduction in U.S. support would severely impact Ukraine's ability to defend itself against Russian aggression, an aggression that violates international law and threatens global security.<br><br>
 
-              A reduction in aid would significantly weaken Ukraine's defenses, leading to dire humanitarian consequences, further enabling Russia's aggression, which has already caused immense suffering and violated international law. <br><br>
+              A weakened Ukraine would not only endanger millions of innocent lives but also destabilize the entire European continent, potentially leading to a broader conflict with far-reaching consequences.<br><br>
 
-              It is crucial that the United States continues to clearly and firmly oppose Russia's illegal invasion and support Ukraine's right to exist as a free and independent nation.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world, about where the U.S. stands on these fundamental issues.<br><br>
+              I am deeply troubled by the lack of consistent and forceful condemnation of Russia's invasion and ongoing war crimes in Ukraine.<br><br>
 
-              I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to strongly advocate for the continuation and strengthening of U.S. assistance to Ukraine.  It is an investment in peace, security, and the democratic values we share. <br><br>
+              Continued, robust U.S. support for Ukraine is essential to upholding international law, defending democracy, and deterring further aggression by authoritarian regimes worldwide. It's a vital investment in global stability.<br><br>
 
-              Thank you for your time and consideration of this urgent matter. I would greatly appreciate it if you would relay my message to Senator <span id="lastNamePlaceholder2">[Last Name]</span>.
+              I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to carefully consider the devastating consequences of any reduction in support for Ukraine and to advocate for continued and strengthened assistance, as well as a firm stance against Russian aggression.<br><br>
+
+              Thank you for taking my call and listening to my concerns. I would appreciate it if you could pass my message on to Senator <span id="lastNamePlaceholder2">[Last Name]</span>.
             </p>
-            <div class="button-container">  
+            <div class="button-container">
                 <button id="callCompletedButton">I Made the Call!</button>
                 <button id="alternateScriptButton">This Script Isn't Right for Me</button>
-            </div> <!-- END NEW BUTTON CONTAINER DIV -->
+            </div>
         </div>
 
         <div id="fireworksContainer" class="fireworks-container"></div>
@@ -101,7 +147,7 @@
         </div>
 
         <div id="callCounterAndHistory">
-            <p>You have called <span id="callCount">0</span> senators!</p>
+            <p>You have called <span id="callCount">0</span> senators! <span id="badgeContainer"></span></p> <!-- Badge container added here -->
             <h3>Call History:</h3>
             <ul id="callHistoryList"></ul>
         </div>
