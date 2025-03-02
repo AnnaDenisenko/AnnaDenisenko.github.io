@@ -17,14 +17,17 @@
             height: 100%; /* Full height */
             overflow: auto; /* Enable scroll if needed */
             background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            text-align: center; /* Center content horizontally in modal */
+            padding-top: 100px; /* Add some top padding to center vertically */
         }
 
         .modal-content {
             background-color: #fefefe;
-            margin: 15% auto; /* 15% from the top and centered */
+            margin: auto; /* Center horizontally */
             padding: 20px;
             border: 1px solid #888;
             width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 600px; /* Limit modal width */
         }
 
         .fireworks-container {
@@ -89,6 +92,18 @@
             margin-right: 5px; /* Space between badges */
             vertical-align: middle; /* Align with the text */
         }
+
+        /* Style for milestone message in modal */
+        #milestoneMessage {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        #milestoneStar {
+            font-size: 2em; /* Larger star */
+            display: block; /* Display star on a new line */
+            margin: 0 auto 15px; /* Center star and add bottom margin */
+        }
     </style>
 </head>
 <body>
@@ -141,13 +156,15 @@
 
         <div id="callAgainModal" class="modal">
             <div class="modal-content">
-                <p>You are amazing! Want to make another call?</p>
+                <p id="milestoneMessage"></p>  <!-- Milestone message will go here -->
+                <p id="milestoneStar"></p>     <!-- Star will go here -->
+                <p>Want to make another call?</p>
                 <button id="callAgainButton">Yes!</button>
             </div>
         </div>
 
         <div id="callCounterAndHistory">
-            <p>You have called <span id="callCount">0</span> senators! <span id="badgeContainer"></span></p> <!-- Badge container added here -->
+            <p>You have called <span id="callCount">0</span> senators! <span id="badgeContainer"></span></p>
             <h3>Call History:</h3>
             <ul id="callHistoryList"></ul>
         </div>
