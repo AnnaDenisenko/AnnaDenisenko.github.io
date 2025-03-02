@@ -151,11 +151,11 @@ YOUNG, Todd (R-IN) SD-185 4-5623
 
               I am calling to express my deep concern about potential shifts in U.S. foreign policy, specifically the proposed halt of military aid to Ukraine.<br><br>
 
-              American aid is Ukraine's lifeline against Russia's brutal invasion.  To cut it is to cripple their defense. <br><br>
+              American aid is Ukraine's lifeline against Russia's brutal invasion.  To cut it is to impair Ukraine's defense. <br><br>
 
               Reduced aid guarantees a weaker Ukraine, unleashing humanitarian catastrophe and emboldening Russia's lawless aggression. The cost in lives and global order is unthinkable.<br><br>
 
-              The U.S. must stand resolute against Russia's illegal war and for Ukraine's sovereign right to exist.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world.<br><br>
+              The U.S. must stand against Russia's illegal war.  Consistent and robust support sends a powerful message to Ukraine, Russia, and to the world.<br><br>
 
               I urge Senator <span id="lastNamePlaceholder">[Last Name]</span> to strongly advocate for the continuation and strengthening of U.S. assistance to Ukraine.  It is an investment in peace, security, and the democratic values we share. <br><br>
 
