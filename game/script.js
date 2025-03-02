@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const callHistoryList = document.getElementById('callHistoryList');
 
     let senators = []; // Will be populated from senatorsData
-    let calledSenators = []; // Array to store senators who have been called - not directly used for persistence in this version, callHistoryList is used instead
+    let calledSenatorFullNames = []; // Store full names of called senators for persistence
     let callCount = 0;
 
     const senatorsData = `
@@ -181,36 +181,42 @@ YOUNG, Todd (R-IN) SD-185 4-5623
     const jsConfetti = new JSConfetti();
 
     // Function to save game state to local storage
-    function saveGameState() {
+        function saveGameState() {
         localStorage.setItem('callCount', JSON.stringify(callCount));
         localStorage.setItem('callHistory', JSON.stringify(callHistoryList.innerHTML));
-        localStorage.setItem('senators', JSON.stringify(senators)); // Save senators array
+        localStorage.setItem('calledSenatorFullNames', JSON.stringify(calledSenatorFullNames)); // Save called senator FULL NAMES
+        console.log("Game state saved:", { callCount, callHistory: callHistoryList.innerHTML, calledSenatorFullNames }); // Debug save
     }
 
     // Function to load game state from local storage
     function loadGameState() {
         const storedCallCount = localStorage.getItem('callCount');
         const storedCallHistory = localStorage.getItem('callHistory');
-        const storedSenators = localStorage.getItem('senators');
+        const storedCalledSenatorFullNames = localStorage.getItem('calledSenatorFullNames'); // Load called senator FULL NAMES
+
+        console.log("Loading game state..."); // Debug load start
 
         if (storedCallCount) {
             callCount = JSON.parse(storedCallCount);
             callCountSpan.textContent = callCount;
+            console.log("Loaded callCount:", callCount);
         }
         if (storedCallHistory) {
             callHistoryList.innerHTML = storedCallHistory;
+            console.log("Loaded callHistory:", storedCallHistory.substring(0, 50) + "..."); // Log a snippet
         }
-        if (storedSenators) {
-            senators = parseSenators(senatorsData).filter(senator => { // Ensure senators are re-parsed and then filtered
-                const storedSenatorsArray = JSON.parse(storedSenators);
-                return !storedSenatorsArray.some(storedSenator => storedSenator.fullName === senator.fullName);
-            });
+        if (storedCalledSenatorFullNames) {
+            calledSenatorFullNames = JSON.parse(storedCalledSenatorFullNames) || []; // Initialize if null
+            console.log("Loaded calledSenatorFullNames:", calledSenatorFullNames);
         } else {
-            senators = parseSenators(senatorsData); // Initialize senators if not in local storage
+            calledSenatorFullNames = []; // Initialize if nothing in storage
+            console.log("No calledSenatorFullNames in storage, initialized to empty array.");
         }
-         if (callCount > 0 && callHistoryList.children.length > 0) { // If there's a history, show last senator info
-            displayLastSenatorInfo(); // Restore the last displayed senator info
+         if (callCount > 0 && callHistoryList.children.length > 0) {
+            displayLastSenatorInfo();
         }
+        initializeSenators(); // Initialize senators AFTER loading called senators
+        console.log("Game state loaded and senators initialized."); // Debug load end
     }
 
      function displayLastSenatorInfo() {
@@ -228,6 +234,12 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         }
     }
 
+    function initializeSenators() {
+        senators = parseSenators(senatorsData).filter(senator => {
+            return !calledSenatorFullNames.includes(senator.fullName); // Filter out already called senators by fullName
+        });
+        console.log("Senators initialized. Remaining senators count:", senators.length);
+    }
 
     function displaySenator() {
         contactInfoDiv.classList.add('hidden');
@@ -250,10 +262,13 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         contactInfoDiv.classList.remove('hidden');
         scriptContainerDiv.classList.remove('hidden');
 
-        senators.splice(randomIndex, 1); // Remove the displayed senator
-        localStorage.setItem('senators', JSON.stringify(senators)); // Update senators in local storage
-        localStorage.setItem('lastSenator', JSON.stringify(senator)); // Save last senator's info
-        saveGameState(); // Save the updated game state
+        senators.splice(randomIndex, 1); // Remove from current senators array
+        calledSenatorFullNames.push(senator.fullName); // Add to called senators list (by fullName)
+
+        localStorage.setItem('lastSenator', JSON.stringify(senator));
+        saveGameState();
+
+        console.log("Displayed senator:", senator.fullName, ". Remaining senators after display:", senators.length); // Debug displaySenator
 
         return senator;
     }
@@ -268,10 +283,11 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
         callHistoryList.appendChild(listItem);
 
-        saveGameState(); // Save game state after call completion
+        saveGameState();
         callAgainModal.style.display = "block";
+        console.log("Call completed for:", senatorName, ". Call count updated to:", callCount); // Debug callCompleted
     });
-
+    
     alternateScriptButton.addEventListener('click', () => {
         if (scriptContainerDiv.dataset.scriptVersion === "1") {
             phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
@@ -280,7 +296,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
             scriptContainerDiv.dataset.scriptVersion = "1";
         }
-        saveGameState(); // Save game state after script change, though not strictly necessary as call count/history doesn't change
+        saveGameState();
     });
 
     callAgainButton.addEventListener('click', () => {
@@ -293,8 +309,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
 
     let currentSenator;
 
-    // Load game state on initial page load
-    loadGameState();
+    loadGameState(); // Load game state on initial page load
 
     getContactButton.addEventListener('click', () => {
         const senator = displaySenator();
