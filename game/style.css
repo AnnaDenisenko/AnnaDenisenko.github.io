@@ -56,9 +56,9 @@ button:hover {
 }
 
 
-.button-container {         /* NEW CSS RULE FOR BUTTON CONTAINER */
-    text-align: center;      /* Center the content (buttons) inside this container */
-    margin-top: 15px;      /* Add some space above the buttons */
+.button-container {
+    text-align: center;
+    margin-top: 15px;
 }
 
 
@@ -75,27 +75,42 @@ button:hover {
     margin-top: 10px;
 }
 
+/* Style for badges */
 #badgeContainer {
-    display: inline-block; /* Display badges horizontally */
-    margin-left: 10px; /* Space between count and badges */
-    vertical-align: middle; /* Align with the text */
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: middle;
 }
 
 .badge {
     display: inline-block;
-    width: 20px; /* Adjust badge size as needed */
+    width: 20px;
     height: 20px;
     line-height: 20px;
     text-align: center;
     font-size: 14px;
-    background-color: gold; /* Example badge style */
+    background-color: gold;
     color: black;
-    border-radius: 50%; /* Make it circular */
-    margin-right: 5px; /* Space between badges */
+    border-radius: 50%;
+    margin-right: 5px;
 }
  .badge-emoji {
-    font-size: 24px; /* Adjust emoji size */
-    display: inline-block; /* Display badges horizontally */
-    margin-right: 5px; /* Space between badges */
-    vertical-align: middle; /* Align with the text */
+    font-size: 24px;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Style for milestone message in modal */
+#milestoneMessage {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    text-align: center; /* Center message text */
+}
+
+#milestoneStar {
+    font-size: 2em; /* Larger star */
+    display: block; /* Display star on a new line */
+    margin: 0 auto 15px; /* Center star and add bottom margin */
+    text-align: center; /* Center star emoji */
 }
