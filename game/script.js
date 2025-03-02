@@ -16,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const callCountSpan = document.getElementById('callCount');
     const callHistoryList = document.getElementById('callHistoryList');
     const filterDropdown = document.getElementById('senatorFilterDropdown');
-    const badgeContainer = document.getElementById('badgeContainer'); // Get badge container
+    const badgeContainer = document.getElementById('badgeContainer');
+    const milestoneMessage = document.getElementById('milestoneMessage'); // Get milestone message element
+    const milestoneStar = document.getElementById('milestoneStar');       // Get milestone star element
 
 
     let senators = [];
@@ -25,10 +27,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSenator;
     let senatorPool = [];
     let currentFilter = 'all';
-    let milestoneBadges = []; // Array to store awarded badges
-    const badgeMilestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // Milestones for badges
-    let nextBadgeMilestoneIndex = 0; // Track next milestone to reach
-
+    let milestoneBadges = [];
+    const badgeMilestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+    let nextBadgeMilestoneIndex = 0;
 
 
     const senatorsData = `
@@ -199,8 +200,8 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         localStorage.setItem('lastSenator', JSON.stringify(currentSenator));
         localStorage.setItem('scriptVersion', JSON.stringify(scriptContainerDiv.dataset.scriptVersion));
         localStorage.setItem('currentFilter', currentFilter);
-        localStorage.setItem('milestoneBadges', JSON.stringify(milestoneBadges)); // Save badges
-        localStorage.setItem('nextBadgeMilestoneIndex', JSON.stringify(nextBadgeMilestoneIndex)); // Save next milestone index
+        localStorage.setItem('milestoneBadges', JSON.stringify(milestoneBadges));
+        localStorage.setItem('nextBadgeMilestoneIndex', JSON.stringify(nextBadgeMilestoneIndex));
     }
 
     function loadGameState() {
@@ -210,8 +211,8 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         const storedScriptVersion = localStorage.getItem('scriptVersion');
         const lastSenatorData = localStorage.getItem('lastSenator');
         const storedFilter = localStorage.getItem('currentFilter');
-        const storedMilestoneBadges = localStorage.getItem('milestoneBadges'); // Load badges
-        const storedNextBadgeMilestoneIndex = localStorage.getItem('nextBadgeMilestoneIndex'); // Load next milestone index
+        const storedMilestoneBadges = localStorage.getItem('milestoneBadges');
+        const storedNextBadgeMilestoneIndex = localStorage.getItem('nextBadgeMilestoneIndex');
 
 
         if (storedCallCount) {
@@ -250,11 +251,11 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             senatorPool = [...senators];
         }
         if (storedMilestoneBadges) {
-            milestoneBadges = JSON.parse(storedMilestoneBadges); // Load badges from storage
-            milestoneBadges.forEach(badge => addBadgeToUI(badge)); // Re-render badges
+            milestoneBadges = JSON.parse(storedMilestoneBadges);
+            milestoneBadges.forEach(badge => addBadgeToUI(badge));
         }
          if (storedNextBadgeMilestoneIndex) {
-            nextBadgeMilestoneIndex = JSON.parse(storedNextBadgeMilestoneIndex); // Load next milestone index
+            nextBadgeMilestoneIndex = JSON.parse(storedNextBadgeMilestoneIndex);
         }
     }
 
@@ -279,7 +280,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         scriptContainerDiv.classList.add('hidden');
 
         if (senatorPool.length === 0) {
-            alert(`I cannot believe it. You've contacted all ${currentFilter === 'republican' ? 'Republican ' : (currentFilter === 'democrat' ? 'Democratic ' : ' ')}senators!`);
+            alert(`You've contacted all ${currentFilter === 'republican' ? 'Republican ' : (currentFilter === 'democrat' ? 'Democratic ' : ' ')}senators! Thank you! Showing all senators now.`);
             currentFilter = 'all';
             applyFilter('all');
             updateDropdownState();
@@ -310,19 +311,26 @@ YOUNG, Todd (R-IN) SD-185 4-5623
     function checkAndAwardBadges() {
         if (nextBadgeMilestoneIndex < badgeMilestones.length && callCount >= badgeMilestones[nextBadgeMilestoneIndex]) {
             const milestone = badgeMilestones[nextBadgeMilestoneIndex];
-            const badgeEmoji = '⭐'; // You can change the badge emoji or use image URLs
-            alert(`Wow! You have called ${milestone} Senators. It's a milestone. You deserve a star.`);
+            const badgeEmoji = '⭐';
+            const message = `Wow! You have called ${milestone} Senators. It's a milestone. You deserve a star.`;
+
+            milestoneMessage.textContent = message; // Set milestone message
+            milestoneStar.textContent = badgeEmoji;   // Display star emoji
+            callAgainModal.style.display = "block";  // Show modal to display message
+
             addBadgeToUI(badgeEmoji);
-            milestoneBadges.push(badgeEmoji); // Store the badge
-            nextBadgeMilestoneIndex++; // Move to the next milestone
-            saveGameState(); // Save updated badges and milestone index
+            milestoneBadges.push(badgeEmoji);
+            nextBadgeMilestoneIndex++;
+            saveGameState();
+        } else {
+            callAgainModal.style.display = "block"; // Just show modal for "call again" if no milestone
         }
     }
 
     function addBadgeToUI(badge) {
         const badgeSpan = document.createElement('span');
         badgeSpan.textContent = badge;
-        badgeSpan.classList.add('badge-emoji'); // Or badge if you use CSS badge style
+        badgeSpan.classList.add('badge-emoji');
         badgeContainer.appendChild(badgeSpan);
     }
 
@@ -337,8 +345,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         callHistoryList.appendChild(listItem);
 
         saveGameState();
-        checkAndAwardBadges(); // Check for badge after call is completed
-        callAgainModal.style.display = "block";
+        checkAndAwardBadges(); // Now checkAndAwardBadges will handle modal display
     });
 
     alternateScriptButton.addEventListener('click', () => {
@@ -354,6 +361,8 @@ YOUNG, Todd (R-IN) SD-185 4-5623
 
     callAgainButton.addEventListener('click', () => {
         callAgainModal.style.display = "none";
+        milestoneMessage.textContent = ''; // Clear milestone message when closing modal
+        milestoneStar.textContent = '';    // Clear star when closing modal
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
         const senator = displaySenator();
@@ -385,7 +394,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
 
 
     loadGameState();
-    updateDropdownState(); // Ensure dropdown reflects loaded filter on initial load
+    updateDropdownState();
 
     if (senatorPool.length === 0) {
         applyFilter('all');
