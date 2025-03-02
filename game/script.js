@@ -15,10 +15,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const callAgainButton = document.getElementById('callAgainButton');
     const callCountSpan = document.getElementById('callCount');
     const callHistoryList = document.getElementById('callHistoryList');
+    const filterDropdown = document.getElementById('senatorFilterDropdown');
+    const badgeContainer = document.getElementById('badgeContainer'); // Get badge container
 
-    let senators = []; // Will be populated from senatorsData
-    let calledSenators = []; // Array to store senators who have been called - not directly used for persistence in this version, callHistoryList is used instead
+
+    let senators = [];
+    let calledSenators = [];
     let callCount = 0;
+    let currentSenator;
+    let senatorPool = [];
+    let currentFilter = 'all';
+    let milestoneBadges = []; // Array to store awarded badges
+    const badgeMilestones = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // Milestones for badges
+    let nextBadgeMilestoneIndex = 0; // Track next milestone to reach
+
+
 
     const senatorsData = `
 ALSOBROOKS, Angela D. (D-MD) SD-B40E 4-4524
@@ -122,7 +133,7 @@ WHITEHOUSE, Sheldon (D-RI) SH-530 4-2921
 WICKER, Roger F. (R-MS) SR-425 4-6253
 WYDEN, Ron (D-OR) SD-221 4-5244
 YOUNG, Todd (R-IN) SD-185 4-5623
-    `;
+`;
 
     const alternateScriptTemplate = `
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
@@ -177,68 +188,77 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         return senatorsArray;
     }
 
-
     const jsConfetti = new JSConfetti();
 
-    // Function to save game state to local storage
     function saveGameState() {
-    localStorage.setItem('callCount', JSON.stringify(callCount));
+        localStorage.setItem('callCount', JSON.stringify(callCount));
+        const historyItems = Array.from(callHistoryList.children);
+        const callHistoryNames = historyItems.map(item => item.textContent);
+        localStorage.setItem('callHistoryNames', JSON.stringify(callHistoryNames));
+        localStorage.setItem('senators', JSON.stringify(senators));
+        localStorage.setItem('lastSenator', JSON.stringify(currentSenator));
+        localStorage.setItem('scriptVersion', JSON.stringify(scriptContainerDiv.dataset.scriptVersion));
+        localStorage.setItem('currentFilter', currentFilter);
+        localStorage.setItem('milestoneBadges', JSON.stringify(milestoneBadges)); // Save badges
+        localStorage.setItem('nextBadgeMilestoneIndex', JSON.stringify(nextBadgeMilestoneIndex)); // Save next milestone index
+    }
 
-    // Get an array of senator names from the call history list items
-    const historyItems = Array.from(callHistoryList.children); // Convert HTMLCollection to Array
-    const callHistoryNames = historyItems.map(item => item.textContent); // Extract text content
-    localStorage.setItem('callHistoryNames', JSON.stringify(callHistoryNames)); // Save the array of names
-
-    localStorage.setItem('senators', JSON.stringify(senators));
-    localStorage.setItem('lastSenator', JSON.stringify(currentSenator));
-    localStorage.setItem('scriptVersion', JSON.stringify(scriptContainerDiv.dataset.scriptVersion)); // Save script version
-}
-
-    // Function to load game state from local storage
     function loadGameState() {
-    const storedCallCount = localStorage.getItem('callCount');
-    const storedCallHistoryNames = localStorage.getItem('callHistoryNames'); // Get the array of names
-    const storedSenators = localStorage.getItem('senators');
-    const storedScriptVersion = localStorage.getItem('scriptVersion');
-    const lastSenatorData = localStorage.getItem('lastSenator');
+        const storedCallCount = localStorage.getItem('callCount');
+        const storedCallHistoryNames = localStorage.getItem('callHistoryNames');
+        const storedSenators = localStorage.getItem('senators');
+        const storedScriptVersion = localStorage.getItem('scriptVersion');
+        const lastSenatorData = localStorage.getItem('lastSenator');
+        const storedFilter = localStorage.getItem('currentFilter');
+        const storedMilestoneBadges = localStorage.getItem('milestoneBadges'); // Load badges
+        const storedNextBadgeMilestoneIndex = localStorage.getItem('nextBadgeMilestoneIndex'); // Load next milestone index
 
 
-    if (storedCallCount) {
+        if (storedCallCount) {
             callCount = JSON.parse(storedCallCount);
             callCountSpan.textContent = callCount;
         }
 
         if (storedCallHistoryNames) {
-            const callHistoryNames = JSON.parse(storedCallHistoryNames); // Parse the array of names
-            callHistoryList.innerHTML = ''; // Clear the existing list
-
-            // Reconstruct the list from the array of names
+            const callHistoryNames = JSON.parse(storedCallHistoryNames);
+            callHistoryList.innerHTML = '';
             callHistoryNames.forEach(name => {
                 const listItem = document.createElement('li');
-                listItem.textContent = name; // Set textContent directly from the name string
+                listItem.textContent = name;
                 callHistoryList.appendChild(listItem);
             });
         }
 
-
         if (storedSenators) {
-            senators = parseSenators(senatorsData).filter(senator => {
-                const storedSenatorsArray = JSON.parse(storedSenators);
-                return !storedSenatorsArray.some(storedSenator => storedSenator.fullName === senator.fullName);
-            });
+            senators = JSON.parse(storedSenators);
         } else {
             senators = parseSenators(senatorsData);
         }
 
-         if (lastSenatorData) {
+        if (lastSenatorData) {
             displayLastSenatorInfo();
         }
-         if (storedScriptVersion) {
+        if (storedScriptVersion) {
             scriptContainerDiv.dataset.scriptVersion = JSON.parse(storedScriptVersion);
+        }
+        if (storedFilter) {
+            currentFilter = storedFilter;
+            applyFilter(currentFilter);
+            updateDropdownState();
+        } else {
+            currentFilter = 'all';
+            senatorPool = [...senators];
+        }
+        if (storedMilestoneBadges) {
+            milestoneBadges = JSON.parse(storedMilestoneBadges); // Load badges from storage
+            milestoneBadges.forEach(badge => addBadgeToUI(badge)); // Re-render badges
+        }
+         if (storedNextBadgeMilestoneIndex) {
+            nextBadgeMilestoneIndex = JSON.parse(storedNextBadgeMilestoneIndex); // Load next milestone index
         }
     }
 
-     function displayLastSenatorInfo() {
+    function displayLastSenatorInfo() {
         const lastSenatorData = JSON.parse(localStorage.getItem('lastSenator'));
         if (lastSenatorData) {
             senatorNamePara.textContent = `Senator: ${lastSenatorData.fullName} (${lastSenatorData.party}-${lastSenatorData.state})`;
@@ -249,7 +269,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
                 : originalScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
             contactInfoDiv.classList.remove('hidden');
             scriptContainerDiv.classList.remove('hidden');
-            currentSenator = lastSenatorData; // Restore currentSenator
+            currentSenator = lastSenatorData;
         }
     }
 
@@ -258,13 +278,18 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
 
-        if (senators.length === 0) {
-            alert("You've contacted all the senators! Thank you!");
-            return null; // Indicate no senator to display
+        if (senatorPool.length === 0) {
+            alert(`I cannot believe it. You've contacted all ${currentFilter === 'republican' ? 'Republican ' : (currentFilter === 'democrat' ? 'Democratic ' : ' ')}senators!`);
+            currentFilter = 'all';
+            applyFilter('all');
+            updateDropdownState();
+            saveGameState();
+            return null;
         }
 
-        const randomIndex = Math.floor(Math.random() * senators.length);
-        const senator = senators[randomIndex];
+
+        const randomIndex = Math.floor(Math.random() * senatorPool.length);
+        const senator = senatorPool[randomIndex];
 
         senatorNamePara.textContent = `Senator: ${senator.fullName} (${senator.party}-${senator.state})`;
         senatorPhonePara.textContent = `Phone: ${senator.phone}`;
@@ -275,12 +300,30 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         contactInfoDiv.classList.remove('hidden');
         scriptContainerDiv.classList.remove('hidden');
 
-        senators.splice(randomIndex, 1); // Remove the displayed senator
-        localStorage.setItem('senators', JSON.stringify(senators)); // Update senators in local storage
-        localStorage.setItem('lastSenator', JSON.stringify(senator)); // Save last senator's info
-        saveGameState(); // Save the updated game state
+        senatorPool.splice(randomIndex, 1);
+        saveGameState();
+        localStorage.setItem('lastSenator', JSON.stringify(senator));
 
         return senator;
+    }
+
+    function checkAndAwardBadges() {
+        if (nextBadgeMilestoneIndex < badgeMilestones.length && callCount >= badgeMilestones[nextBadgeMilestoneIndex]) {
+            const milestone = badgeMilestones[nextBadgeMilestoneIndex];
+            const badgeEmoji = '⭐'; // You can change the badge emoji or use image URLs
+            alert(`Wow! You have called ${milestone} Senators. It's a milestone. You deserve a star.`);
+            addBadgeToUI(badgeEmoji);
+            milestoneBadges.push(badgeEmoji); // Store the badge
+            nextBadgeMilestoneIndex++; // Move to the next milestone
+            saveGameState(); // Save updated badges and milestone index
+        }
+    }
+
+    function addBadgeToUI(badge) {
+        const badgeSpan = document.createElement('span');
+        badgeSpan.textContent = badge;
+        badgeSpan.classList.add('badge-emoji'); // Or badge if you use CSS badge style
+        badgeContainer.appendChild(badgeSpan);
     }
 
 
@@ -293,7 +336,8 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
         callHistoryList.appendChild(listItem);
 
-        saveGameState(); // Save game state after call completion
+        saveGameState();
+        checkAndAwardBadges(); // Check for badge after call is completed
         callAgainModal.style.display = "block";
     });
 
@@ -305,7 +349,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
             scriptContainerDiv.dataset.scriptVersion = "1";
         }
-        saveGameState(); // Save game state after script change, though not strictly necessary as call count/history doesn't change
+        saveGameState();
     });
 
     callAgainButton.addEventListener('click', () => {
@@ -316,10 +360,37 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         currentSenator = senator;
     });
 
-    let currentSenator;
+    function applyFilter(filter) {
+        currentFilter = filter;
+        if (filter === 'republican') {
+            senatorPool = senators.filter(senator => senator.party === 'R');
+        } else if (filter === 'democrat') {
+            senatorPool = senators.filter(senator => senator.party === 'D');
+        } else {
+            senatorPool = [...senators];
+        }
+        localStorage.setItem('currentFilter', currentFilter);
+        updateDropdownState();
+    }
 
-    // Load game state on initial page load
+    function updateDropdownState() {
+        filterDropdown.value = currentFilter;
+    }
+
+
+    filterDropdown.addEventListener('change', (event) => {
+        const selectedFilter = event.target.value;
+        applyFilter(selectedFilter);
+    });
+
+
     loadGameState();
+    updateDropdownState(); // Ensure dropdown reflects loaded filter on initial load
+
+    if (senatorPool.length === 0) {
+        applyFilter('all');
+    }
+
 
     getContactButton.addEventListener('click', () => {
         const senator = displaySenator();
