@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const websiteDomainName = "YourNewWebsiteName.com"; // Change this to your desired website name
+
     const getContactButton = document.getElementById('getContactButton');
     const contactInfoDiv = document.getElementById('contactInfo');
     const senatorNamePara = document.getElementById('senatorName');
@@ -20,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const milestoneMessage = document.getElementById('milestoneMessage'); // Get milestone message element
     const milestoneStar = document.getElementById('milestoneStar');       // Get milestone star element
 
+    const websiteNamePlaceholderSpan = document.getElementById('websiteNamePlaceholder');
+    if (websiteNamePlaceholderSpan) {
+        websiteNamePlaceholderSpan.textContent = websiteDomainName + " - From Couch to Capitol"; // Or just websiteDomainName, or customize as you like
+    }
 
     let senators = [];
     let calledSenators = [];
