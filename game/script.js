@@ -263,7 +263,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         if (lastSenatorData) {
             senatorNamePara.textContent = `Senator: ${lastSenatorData.fullName} (${lastSenatorData.party}-${lastSenatorData.state})`;
             senatorPhonePara.textContent = `${lastSenatorData.phone}`;
-            senatorBuildingPara.textContent = `Location: ${lastSenatorData.building}`;
+            senatorBuildingPara.textContent = `Office: ${lastSenatorData.building}`;
             phoneScriptPara.innerHTML = scriptContainerDiv.dataset.scriptVersion === "2"
                 ? alternateScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName)
                 : originalScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
