@@ -277,7 +277,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
     function displaySenator() {
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
-
+    
         if (senatorPool.length === 0) {
             alert(`You've contacted all ${currentFilter === 'republican' ? 'Republican ' : (currentFilter === 'democrat' ? 'Democratic ' : ' ')}senators! Thank you! Showing all senators now.`);
             currentFilter = 'all';
@@ -286,24 +286,26 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             saveGameState();
             return null;
         }
-
-
+    
         const randomIndex = Math.floor(Math.random() * senatorPool.length);
         const senator = senatorPool[randomIndex];
-
+    
         senatorNamePara.textContent = `Senator: ${senator.fullName} (${senator.party}-${senator.state})`;
-        senatorPhonePara.textContent = `Phone: ${senator.phone}`;
+        // Update senatorPhonePara to set both textContent and href
+        senatorPhonePara.textContent = senator.phone; // Set the displayed phone number
+        senatorPhonePara.href = `tel:${senator.phone}`; // Set the href for calling
+    
         senatorBuildingPara.textContent = `Location: ${senator.building}`;
         phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, senator.lastName);
         scriptContainerDiv.dataset.scriptVersion = "1";
-
+    
         contactInfoDiv.classList.remove('hidden');
         scriptContainerDiv.classList.remove('hidden');
-
+    
         senatorPool.splice(randomIndex, 1);
         saveGameState();
         localStorage.setItem('lastSenator', JSON.stringify(senator));
-
+    
         return senator;
     }
 
