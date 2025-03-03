@@ -124,7 +124,7 @@
             <p id="senatorName">Senator:</p>
             <!-- Change <p> to <a> for senatorPhone -->
             <p>Phone: <a id="senatorPhone" href="#"></a></p>
-            <p id="senatorBuilding">Office:</p>
+            <p id="senatorBuilding">Location:</p>
         </div>
 
         <div id="scriptContainer" class="hidden">
@@ -178,8 +178,19 @@
             <p>You have called <span id="callCount">0</span> senators! <span id="badgeContainer"></span></p>
             <h3>Call History:</h3>
             <ul id="callHistoryList"></ul>
+             <button id="startOverButton">Start Over</button> <!-- NEW START OVER BUTTON -->
         </div>
     </div>
+
+    <div id="resetConfirmationModal" class="modal">  <!-- NEW RESET CONFIRMATION MODAL -->
+        <div class="modal-content">
+            <p id="resetMessage">Are you sure you want to start over and erase your call history?</p>
+            <p id="badgeLossWarning" class="hidden">Your badges will be gone too! 😭</p> <!-- Badge loss warning -->
+            <button id="confirmResetButton">Yes, Start Over</button>
+            <button id="cancelResetButton">No, Cancel</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-confetti@latest/dist/js-confetti.browser.js"></script>
 </body>
