@@ -17,8 +17,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const callHistoryList = document.getElementById('callHistoryList');
     const filterDropdown = document.getElementById('senatorFilterDropdown');
     const badgeContainer = document.getElementById('badgeContainer');
-    const milestoneMessage = document.getElementById('milestoneMessage'); // Get milestone message element
-    const milestoneStar = document.getElementById('milestoneStar');       // Get milestone star element
+    const milestoneMessage = document.getElementById('milestoneMessage');
+    const milestoneStar = document.getElementById('milestoneStar');
+    const scriptVersion2ButtonsDiv = document.getElementById('scriptVersion2Buttons');
+    const scriptVersion3ButtonsDiv = document.getElementById('scriptVersion3Buttons');
+    const scriptVersion4ButtonsDiv = document.getElementById('scriptVersion4Buttons'); // NEW BUTTON DIV for version 4
+    const callCompletedButtonV2 = document.getElementById('callCompletedButtonV2');
+    const pizzazzButton = document.getElementById('pizzazzButton');
+    const callCompletedButtonV3 = document.getElementById('callCompletedButtonV3');
+    const morePizzazzButton = document.getElementById('morePizzazzButton');     // NEW MORE PIZZAZZ BUTTON
+    const callCompletedButtonV4 = document.getElementById('callCompletedButtonV4'); // NEW BUTTON for version 4
+
 
     let senators = [];
     let calledSenators = [];
@@ -145,6 +154,26 @@ YOUNG, Todd (R-IN) SD-185 4-5623
               I would appreciate it if you could pass my message on to Senator <span id="lastNamePlaceholder2">[Last Name]</span>.
     `;
 
+    const thirdScriptTemplate = `
+              Yo, just a constituent from [YOUR ZIP CODE] dropping a line.  Trump's Ukraine talk? Not cool.<br><br>
+
+              Seriously, cutting aid? Bad move. Ukraine's fighting for its life and democracy, FYI. We gotta back them up.<br><br>
+
+              Later,<br>
+              [YOUR NAME]
+    `;
+
+    const fourthScriptTemplate = `
+              Good day. My name is [YOUR NAME]. I am a concerned constituent from [YOUR ZIP CODE].<br><br>
+
+              Would you mind relaying the following message to Senator <span id="lastNamePlaceholder">[Last Name]</span>? It concerns the state of the democracy in the US.<br><br>
+
+              WHAT THE F*****CK?! AAAAAAAAAARGHHHHHHHH!!!!!! [FEEL FREE TO EXPRESS YOUR FEELINGS YOUR WAY]<br><br>
+
+              Thank you.
+    `;
+
+
     const originalScriptTemplate = `
               My name is [YOUR NAME]. I am a constituent residing at [YOUR ZIP CODE].<br><br>
 
@@ -240,6 +269,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         }
         if (storedScriptVersion) {
             scriptContainerDiv.dataset.scriptVersion = JSON.parse(storedScriptVersion);
+            setScriptButtonsVisibility(JSON.parse(storedScriptVersion));
         }
         if (storedFilter) {
             currentFilter = storedFilter;
@@ -264,9 +294,17 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             senatorNamePara.textContent = `Senator: ${lastSenatorData.fullName} (${lastSenatorData.party}-${lastSenatorData.state})`;
             senatorPhonePara.textContent = `${lastSenatorData.phone}`;
             senatorBuildingPara.textContent = `Office: ${lastSenatorData.building}`;
-            phoneScriptPara.innerHTML = scriptContainerDiv.dataset.scriptVersion === "2"
-                ? alternateScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName)
-                : originalScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
+            const scriptVer = localStorage.getItem('scriptVersion') ? JSON.parse(localStorage.getItem('scriptVersion')) : "1";
+            if (scriptVer === "2") {
+                phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
+            } else if (scriptVer === "3") {
+                 phoneScriptPara.innerHTML = thirdScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
+            } else if (scriptVer === "4") {
+                 phoneScriptPara.innerHTML = fourthScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
+            }
+            else {
+                phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, lastSenatorData.lastName);
+            }
             contactInfoDiv.classList.remove('hidden');
             scriptContainerDiv.classList.remove('hidden');
             currentSenator = lastSenatorData;
@@ -277,7 +315,13 @@ YOUNG, Todd (R-IN) SD-185 4-5623
     function displaySenator() {
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
-    
+        scriptVersion2ButtonsDiv.classList.add('hidden');
+        scriptVersion3ButtonsDiv.classList.add('hidden');
+        scriptVersion4ButtonsDiv.classList.add('hidden'); // Ensure version 4 buttons are hidden
+        alternateScriptButton.classList.remove('hidden');
+        callCompletedButton.classList.remove('hidden');
+
+
         if (senatorPool.length === 0) {
             alert(`You've contacted all ${currentFilter === 'republican' ? 'Republican ' : (currentFilter === 'democrat' ? 'Democratic ' : ' ')}senators! Thank you! Showing all senators now.`);
             currentFilter = 'all';
@@ -286,26 +330,26 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             saveGameState();
             return null;
         }
-    
+
+
         const randomIndex = Math.floor(Math.random() * senatorPool.length);
         const senator = senatorPool[randomIndex];
-    
+
         senatorNamePara.textContent = `Senator: ${senator.fullName} (${senator.party}-${senator.state})`;
-        // Update senatorPhonePara to set both textContent and href
-        senatorPhonePara.textContent = senator.phone; // Set the displayed phone number
-        senatorPhonePara.href = `tel:${senator.phone}`; // Set the href for calling
-    
+        senatorPhonePara.textContent = senator.phone;
+        senatorPhonePara.href = `tel:${senator.phone}`;
+
         senatorBuildingPara.textContent = `Location: ${senator.building}`;
         phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, senator.lastName);
         scriptContainerDiv.dataset.scriptVersion = "1";
-    
+
         contactInfoDiv.classList.remove('hidden');
         scriptContainerDiv.classList.remove('hidden');
-    
+
         senatorPool.splice(randomIndex, 1);
         saveGameState();
         localStorage.setItem('lastSenator', JSON.stringify(senator));
-    
+
         return senator;
     }
 
@@ -315,16 +359,16 @@ YOUNG, Todd (R-IN) SD-185 4-5623
             const badgeEmoji = '⭐';
             const message = `Wow! You have called ${milestone} Senators. It's a milestone. You deserve a star.`;
 
-            milestoneMessage.textContent = message; // Set milestone message
-            milestoneStar.textContent = badgeEmoji;   // Display star emoji
-            callAgainModal.style.display = "block";  // Show modal to display message
+            milestoneMessage.textContent = message;
+            milestoneStar.textContent = badgeEmoji;
+            callAgainModal.style.display = "block";
 
             addBadgeToUI(badgeEmoji);
             milestoneBadges.push(badgeEmoji);
             nextBadgeMilestoneIndex++;
             saveGameState();
         } else {
-            callAgainModal.style.display = "block"; // Just show modal for "call again" if no milestone
+            callAgainModal.style.display = "block";
         }
     }
 
@@ -333,6 +377,36 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         badgeSpan.textContent = badge;
         badgeSpan.classList.add('badge-emoji');
         badgeContainer.appendChild(badgeSpan);
+    }
+
+    function setScriptButtonsVisibility(version) {
+        if (version === "2") {
+            scriptVersion2ButtonsDiv.classList.remove('hidden');
+            scriptVersion3ButtonsDiv.classList.add('hidden');
+            scriptVersion4ButtonsDiv.classList.add('hidden'); // Hide version 4 buttons
+            callCompletedButton.classList.add('hidden');
+            alternateScriptButton.classList.add('hidden');
+        } else if (version === "3") {
+            scriptVersion3ButtonsDiv.classList.remove('hidden');
+            scriptVersion2ButtonsDiv.classList.add('hidden');
+            scriptVersion4ButtonsDiv.classList.add('hidden'); // Hide version 4 buttons
+            callCompletedButton.classList.add('hidden');
+            alternateScriptButton.classList.add('hidden');
+        } else if (version === "4") {
+            scriptVersion4ButtonsDiv.classList.remove('hidden'); // Show version 4 buttons
+            scriptVersion3ButtonsDiv.classList.add('hidden');
+            scriptVersion2ButtonsDiv.classList.add('hidden');
+            callCompletedButton.classList.add('hidden');
+            alternateScriptButton.classList.add('hidden');
+        }
+
+        else { // version 1 or default
+            scriptVersion2ButtonsDiv.classList.add('hidden');
+            scriptVersion3ButtonsDiv.classList.add('hidden');
+            scriptVersion4ButtonsDiv.classList.add('hidden'); // Hide version 4 buttons
+            callCompletedButton.classList.remove('hidden');
+            alternateScriptButton.classList.remove('hidden');
+        }
     }
 
 
@@ -346,24 +420,79 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         callHistoryList.appendChild(listItem);
 
         saveGameState();
-        checkAndAwardBadges(); // Now checkAndAwardBadges will handle modal display
+        checkAndAwardBadges();
+        callAgainModal.style.display = "block";
     });
 
+    callCompletedButtonV2.addEventListener('click', () => {
+        jsConfetti.addConfetti();
+        callCount++;
+        callCountSpan.textContent = callCount;
+        const senatorName = currentSenator.fullName;
+        const listItem = document.createElement('li');
+        listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
+        callHistoryList.appendChild(listItem);
+
+        saveGameState();
+        checkAndAwardBadges();
+        callAgainModal.style.display = "block";
+    });
+
+    callCompletedButtonV3.addEventListener('click', () => {
+        jsConfetti.addConfetti();
+        callCount++;
+        callCountSpan.textContent = callCount;
+        const senatorName = currentSenator.fullName;
+        const listItem = document.createElement('li');
+        listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
+        callHistoryList.appendChild(listItem);
+
+        saveGameState();
+        checkAndAwardBadges();
+        callAgainModal.style.display = "block";
+    });
+
+    callCompletedButtonV4.addEventListener('click', () => { // Event for "I Made the Call!" button version 4
+        jsConfetti.addConfetti();
+        callCount++;
+        callCountSpan.textContent = callCount;
+        const senatorName = currentSenator.fullName;
+        const listItem = document.createElement('li');
+        listItem.textContent = senatorName + ' (' + currentSenator.party + '-' + currentSenator.state + ')';
+        callHistoryList.appendChild(listItem);
+
+        saveGameState();
+        checkAndAwardBadges();
+        callAgainModal.style.display = "block";
+    });
+
+
+    morePizzazzButton.addEventListener('click', () => {
+        phoneScriptPara.innerHTML = fourthScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
+        scriptContainerDiv.dataset.scriptVersion = "4";
+        setScriptButtonsVisibility("4"); // Show version 4 buttons, hide others
+        saveGameState();
+    });
+
+    pizzazzButton.addEventListener('click', () => {
+        phoneScriptPara.innerHTML = thirdScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
+        scriptContainerDiv.dataset.scriptVersion = "3";
+        setScriptButtonsVisibility("3");
+        saveGameState();
+    });
+
+
     alternateScriptButton.addEventListener('click', () => {
-        if (scriptContainerDiv.dataset.scriptVersion === "1") {
-            phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
-            scriptContainerDiv.dataset.scriptVersion = "2";
-        } else {
-            phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
-            scriptContainerDiv.dataset.scriptVersion = "1";
-        }
+        phoneScriptPara.innerHTML = alternateScriptTemplate.replace(/\[Last Name\]/g, currentSenator.lastName);
+        scriptContainerDiv.dataset.scriptVersion = "2";
+        setScriptButtonsVisibility("2");
         saveGameState();
     });
 
     callAgainButton.addEventListener('click', () => {
         callAgainModal.style.display = "none";
-        milestoneMessage.textContent = ''; // Clear milestone message when closing modal
-        milestoneStar.textContent = '';    // Clear star when closing modal
+        milestoneMessage.textContent = '';
+        milestoneStar.textContent = '';
         contactInfoDiv.classList.add('hidden');
         scriptContainerDiv.classList.add('hidden');
         const senator = displaySenator();
