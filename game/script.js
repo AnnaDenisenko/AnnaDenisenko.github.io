@@ -27,6 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const callCompletedButtonV3 = document.getElementById('callCompletedButtonV3');
     const morePizzazzButton = document.getElementById('morePizzazzButton');     // NEW MORE PIZZAZZ BUTTON
     const callCompletedButtonV4 = document.getElementById('callCompletedButtonV4'); // NEW BUTTON for version 4
+    const startOverButton = document.getElementById('startOverButton'); // New button
+    const resetConfirmationModal = document.getElementById('resetConfirmationModal'); // New modal
+    const confirmResetButton = document.getElementById('confirmResetButton');   // Buttons in modal
+    const cancelResetButton = document.getElementById('cancelResetButton');    // Buttons in modal
+    const badgeLossWarning = document.getElementById('badgeLossWarning');      // Badge loss warning paragraph
+    const resetMessage = document.getElementById('resetMessage');              // Reset message paragraph
+
 
 
     let senators = [];
@@ -339,7 +346,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         senatorPhonePara.textContent = senator.phone;
         senatorPhonePara.href = `tel:${senator.phone}`;
 
-        senatorBuildingPara.textContent = `Location: ${senator.building}`;
+        senatorBuildingPara.textContent = `Office: ${senator.building}`;
         phoneScriptPara.innerHTML = originalScriptTemplate.replace(/\[Last Name\]/g, senator.lastName);
         scriptContainerDiv.dataset.scriptVersion = "1";
 
@@ -539,4 +546,43 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         const senator = displaySenator();
         currentSenator = senator;
     });
+
+    // Start Over Button Logic
+    startOverButton.addEventListener('click', () => {
+        if (milestoneBadges.length > 0) {
+            badgeLossWarning.classList.remove('hidden'); // Show badge loss warning
+        } else {
+            badgeLossWarning.classList.add('hidden'); // Ensure hidden if no badges
+        }
+        resetConfirmationModal.style.display = "block"; // Show reset confirmation modal
+    });
+
+    confirmResetButton.addEventListener('click', () => {
+        // Reset all game state variables
+        callCount = 0;
+        callCountSpan.textContent = callCount;
+        callHistoryList.innerHTML = '';
+        milestoneBadges = [];
+        badgeContainer.innerHTML = '';
+        nextBadgeMilestoneIndex = 0;
+        senators = parseSenators(senatorsData); // Reset senators array
+        senatorPool = [...senators]; // Reset senatorPool to all senators
+        localStorage.removeItem('callCount');
+        localStorage.removeItem('callHistoryNames');
+        localStorage.removeItem('milestoneBadges');
+        localStorage.removeItem('nextBadgeMilestoneIndex');
+        localStorage.removeItem('lastSenator'); // Clear last senator too
+        localStorage.removeItem('scriptVersion'); // Clear script version too
+        localStorage.removeItem('currentFilter'); // Clear current filter too
+
+
+        resetConfirmationModal.style.display = "none"; // Hide modal after reset
+        alert("Game progress has been reset."); // Optional confirmation alert
+        window.scrollTo(0, 0); // Scroll to top after reset
+    });
+
+    cancelResetButton.addEventListener('click', () => {
+        resetConfirmationModal.style.display = "none"; // Just hide the modal, do nothing else
+    });
+
 });
