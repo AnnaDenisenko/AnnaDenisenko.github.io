@@ -422,6 +422,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         saveGameState();
         checkAndAwardBadges();
         callAgainModal.style.display = "block";
+        window.scrollTo(0, 0); // Scroll to top after call
     });
 
     callCompletedButtonV2.addEventListener('click', () => {
@@ -436,6 +437,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         saveGameState();
         checkAndAwardBadges();
         callAgainModal.style.display = "block";
+        window.scrollTo(0, 0); // Scroll to top after call
     });
 
     callCompletedButtonV3.addEventListener('click', () => {
@@ -450,6 +452,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         saveGameState();
         checkAndAwardBadges();
         callAgainModal.style.display = "block";
+        window.scrollTo(0, 0); // Scroll to top after call
     });
 
     callCompletedButtonV4.addEventListener('click', () => { // Event for "I Made the Call!" button version 4
@@ -464,6 +467,7 @@ YOUNG, Todd (R-IN) SD-185 4-5623
         saveGameState();
         checkAndAwardBadges();
         callAgainModal.style.display = "block";
+        window.scrollTo(0, 0); // Scroll to top after call
     });
 
 
