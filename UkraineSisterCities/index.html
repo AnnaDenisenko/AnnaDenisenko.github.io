@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US & Ukraine Sister Cities</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        :root {
+            --ukraine-blue: #0057B7;
+            --ukraine-yellow: #FFDD00;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: var(--ukraine-blue);
+            color: var(--ukraine-yellow);
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 { margin: 0; font-size: 2.5rem; }
+        header p { margin-top: 0.5rem; font-size: 1.1rem; color: #fff; }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Map Styling */
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #ddd;
+            z-index: 1;
+        }
+        
+        /* Custom Map Pins */
+        .custom-pin {
+            background: transparent;
+            border: none;
+            filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.4));
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--ukraine-blue);
+            box-shadow: 0 0 0 3px rgba(0, 87, 183, 0.2);
+        }
+
+        /* Subtle Toggle Button Styling */
+        .controls-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-btn {
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #ccc;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            background-color: #f1f3f5;
+            color: #333;
+            border-color: #999;
+        }
+        
+        /* Table Styling */
+        #tableContainer {
+            transition: all 0.3s ease;
+        }
+
+        .city-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            width: 50%;
+        }
+        
+        th {
+            background-color: #f1f3f5;
+            font-weight: 600;
+            color: #444;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Sortable Headers */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        
+        .sortable:hover {
+            background-color: #e2e6ea;
+        }
+
+        .sort-icon {
+            font-size: 0.8rem;
+            margin-left: 6px;
+            color: #999;
+        }
+        
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8f9fa; }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            th, td { padding: 0.8rem; }
+            h1 { font-size: 2rem; }
+            #map { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>US & Ukraine Sister Cities</h1>
+    <p>A directory of solidarity, resilience, and global partnership.</p>
+</header>
+
+<div class="container">
+    <input type="text" id="searchInput" class="search-box" placeholder="Search for a US city, US state, or Ukrainian city...">
+    
+    <div id="map"></div>
+    
+    <div class="controls-row">
+        <button id="toggleTableBtn" class="toggle-btn">Hide Table View</button>
+    </div>
+
+    <div id="tableContainer">
+        <table class="city-table" id="cityTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortData('usCity')">US City, State <span class="sort-icon" id="usCity-icon">⇕</span></th>
+                    <th class="sortable" onclick="sortData('uaCity')">Ukrainian City <span class="sort-icon" id="uaCity-icon">⇕</span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+        <div id="noResults" class="no-results">
+            <h3>No matching cities found</h3>
+            <p>Try adjusting your search terms.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    // Dictionary mapping abbreviations to full names for the search function
+    const stateDictionary = {
+        "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+        "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+        "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+        "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+        "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+        "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+        "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+        "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+        "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+        "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+    };
+
+    const sisterCities = [
+        { usCity: "Albany", usState: "NY", uaCity: "Bucha", usLat: 42.6526, usLon: -73.7562, uaLat: 50.5516, uaLon: 30.2110 },
+        { usCity: "Albuquerque", usState: "NM", uaCity: "Kharkiv", usLat: 35.0844, usLon: -106.6504, uaLat: 50.0000, uaLon: 36.2500 },
+        { usCity: "Amarillo", usState: "TX", uaCity: "Dnipro", usLat: 35.2220, usLon: -101.8313, uaLat: 48.4647, uaLon: 35.0462 },
+        { usCity: "Arlington", usState: "VA", uaCity: "Ivano-Frankivsk", usLat: 38.8816, usLon: -77.0910, uaLat: 48.9226, uaLon: 24.7111 },
+        { usCity: "Athens", usState: "GA", uaCity: "Kamianets-Podilskyi", usLat: 33.9519, usLon: -83.3576, uaLat: 48.6791, uaLon: 26.5843 },
+        { usCity: "Athens", usState: "OH", uaCity: "Ostroh", usLat: 39.3292, usLon: -82.1013, uaLat: 50.3283, uaLon: 26.5161 },
+        { usCity: "Baltimore", usState: "MD", uaCity: "Odesa", usLat: 39.2904, usLon: -76.6122, uaLat: 46.4825, uaLon: 30.7233 },
+        { usCity: "Birmingham", usState: "AL", uaCity: "Vinnytsia", usLat: 33.5186, usLon: -86.8104, uaLat: 49.2331, uaLon: 28.4682 },
+        { usCity: "Buffalo", usState: "NY", uaCity: "Drohobych", usLat: 42.8864, usLon: -78.8784, uaLat: 49.3524, uaLon: 23.5044 },
+        { usCity: "Buffalo", usState: "NY", uaCity: "Horlivka", usLat: 42.8864, usLon: -78.8784, uaLat: 48.3000, uaLon: 38.0500 },
+        { usCity: "Chamblee", usState: "GA", uaCity: "Kovel", usLat: 33.8920, usLon: -84.2988, uaLat: 51.2167, uaLon: 24.7167 },
+        { usCity: "Chicago", usState: "IL", uaCity: "Kyiv", usLat: 41.8781, usLon: -87.6298, uaLat: 50.4501, uaLon: 30.5234 },
+        { usCity: "Cincinnati", usState: "OH", uaCity: "Kharkiv", usLat: 39.1031, usLon: -84.5120, uaLat: 50.0000, uaLon: 36.2500 },
+        { usCity: "Corning", usState: "NY", uaCity: "Lviv", usLat: 42.1428, usLon: -77.0547, uaLat: 49.8397, uaLon: 24.0297 },
+        { usCity: "Corvallis", usState: "OR", uaCity: "Uzhhorod", usLat: 44.5646, usLon: -123.2620, uaLat: 48.6208, uaLon: 22.2879 },
+        { usCity: "Davis", usState: "CA", uaCity: "Uman", usLat: 38.5449, usLon: -121.7405, uaLat: 48.7484, uaLon: 30.2215 },
+        { usCity: "Erie", usState: "PA", uaCity: "Chornomorsk", usLat: 42.1292, usLon: -80.0851, uaLat: 46.3014, uaLon: 30.6569 },
+        { usCity: "Flint", usState: "MI", uaCity: "Poltava", usLat: 43.0125, usLon: -83.6875, uaLat: 49.5883, uaLon: 34.5514 },
+        { usCity: "Hoboken", usState: "NJ", uaCity: "Melitopol", usLat: 40.7440, usLon: -74.0324, uaLat: 46.8489, uaLon: 35.3672 },
+        { usCity: "Hopkins", usState: "MN", uaCity: "Boryspil", usLat: 44.9250, usLon: -93.4117, uaLat: 50.3500, uaLon: 30.9500 },
+        { usCity: "Irondequoit", usState: "NY", uaCity: "Poltava", usLat: 43.2081, usLon: -77.5828, uaLat: 49.5883, uaLon: 34.5514 },
+        { usCity: "Kent", usState: "WA", uaCity: "Lutsk", usLat: 47.3809, usLon: -122.2348, uaLat: 50.7472, uaLon: 25.3253 },
+        { usCity: "Lowell", usState: "MA", uaCity: "Berdiansk", usLat: 42.6334, usLon: -71.3162, uaLat: 46.7556, uaLon: 36.7889 },
+        { usCity: "Miami", usState: "FL", uaCity: "Irpin", usLat: 25.7617, usLon: -80.1918, uaLat: 50.5187, uaLon: 30.2372 },
+        { usCity: "Milwaukee", usState: "WI", uaCity: "Irpin", usLat: 43.0389, usLon: -87.9065, uaLat: 50.5187, uaLon: 30.2372 },
+        { usCity: "Modesto", usState: "CA", uaCity: "Khmelnytskyi", usLat: 37.6393, usLon: -120.9969, uaLat: 49.4230, uaLon: 26.9871 },
+        { usCity: "Muscatine", usState: "IA", uaCity: "Drohobych", usLat: 41.4245, usLon: -91.0434, uaLat: 49.3524, uaLon: 23.5044 },
+        { usCity: "Newton", usState: "IA", uaCity: "Smila", usLat: 41.6994, usLon: -93.0469, uaLat: 49.2241, uaLon: 31.8741 },
+        { usCity: "Oskaloosa", usState: "IA", uaCity: "Shpola", usLat: 41.2964, usLon: -92.6444, uaLat: 49.0016, uaLon: 31.4132 },
+        { usCity: "Pensacola", usState: "FL", uaCity: "Horlivka", usLat: 30.4213, usLon: -87.2169, uaLat: 48.3000, uaLon: 38.0500 },
+        { usCity: "Pittsburgh", usState: "PA", uaCity: "Donetsk", usLat: 40.4406, usLon: -79.9959, uaLat: 48.0159, uaLon: 37.8028 },
+        { usCity: "Prairie Village", usState: "KS", uaCity: "Dolyna", usLat: 38.9917, usLon: -94.6336, uaLat: 48.9728, uaLon: 24.0122 },
+        { usCity: "Rockford", usState: "IL", uaCity: "Brovary", usLat: 42.2711, usLon: -89.0940, uaLat: 50.5111, uaLon: 30.7900 },
+        { usCity: "Sacramento", usState: "CA", uaCity: "Sumy", usLat: 38.5816, usLon: -121.4944, uaLat: 50.9072, uaLon: 34.7981 },
+        { usCity: "Salt Lake City", usState: "UT", uaCity: "Chernivtsi", usLat: 40.7608, usLon: -111.8910, uaLat: 48.2915, uaLon: 25.9352 },
+        { usCity: "Santa Cruz", usState: "CA", uaCity: "Alushta", usLat: 36.9741, usLon: -122.0308, uaLat: 44.6678, uaLon: 34.4082 },
+        { usCity: "Santa Rosa", usState: "CA", uaCity: "Cherkasy", usLat: 38.4404, usLon: -122.7141, uaLat: 49.4444, uaLon: 32.0598 },
+        { usCity: "Sonoma", usState: "CA", uaCity: "Kaniv", usLat: 38.2919, usLon: -122.4580, uaLat: 49.7436, uaLon: 31.4556 },
+        { usCity: "Stamford", usState: "CT", uaCity: "Kramatorsk", usLat: 41.0534, usLon: -73.5387, uaLat: 48.7390, uaLon: 37.5844 },
+        { usCity: "Syracuse", usState: "NY", uaCity: "Irpin", usLat: 43.0481, usLon: -76.1474, uaLat: 50.5187, uaLon: 30.2372 },
+        { usCity: "Tacoma", usState: "WA", uaCity: "Brovary", usLat: 47.2529, usLon: -122.4443, uaLat: 50.5111, uaLon: 30.7900 },
+        { usCity: "Vincennes", usState: "IN", uaCity: "Ovruch", usLat: 38.6773, usLon: -87.5286, uaLat: 51.3250, uaLon: 28.8058 },
+        { usCity: "Wabash", usState: "IN", uaCity: "Korosten", usLat: 40.7978, usLon: -85.8205, uaLat: 50.9500, uaLon: 28.6333 },
+        { usCity: "White Plains", usState: "NY", uaCity: "Chernihiv", usLat: 41.0339, usLon: -73.7629, uaLat: 51.4982, uaLon: 31.2893 }
+    ];
+
+    // Helper to generate SVG map pins dynamically
+    const createMarkerIcon = (color) => {
+        const svgTemplate = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+                <path fill="${color}" stroke="#ffffff" stroke-width="1.5" d="M16 2C10.5 2 6 6.5 6 12c0 7.5 10 18 10 18s10-10.5 10-18c0-5.5-4.5-10-10-10zm0 14c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z"/>
+            </svg>`;
+        
+        return L.divIcon({
+            className: 'custom-pin', // Uses CSS to remove background and add shadow
+            html: svgTemplate,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+    };
+
+    // Define colors
+    const blueIcon = createMarkerIcon('#0057B7'); // US Blue
+    const yellowIcon = createMarkerIcon('#FFD000'); // Pleasant Yellow
+
+    // Map and Data State
+    let currentMapLayers = []; 
+    let currentSortColumn = '';
+    let currentSortDirection = '';
+
+    // Initialize Map
+    const map = L.map('map').setView([45, -25], 2); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // DOM Elements
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const noResults = document.getElementById('noResults');
+    const cityTable = document.getElementById('cityTable');
+    const toggleTableBtn = document.getElementById('toggleTableBtn');
+    const tableContainer = document.getElementById('tableContainer');
+
+    // Toggle Table Logic
+    let isTableVisible = true;
+    toggleTableBtn.addEventListener('click', () => {
+        isTableVisible = !isTableVisible;
+        if (isTableVisible) {
+            tableContainer.style.display = 'block';
+            toggleTableBtn.textContent = 'Hide Table View';
+        } else {
+            tableContainer.style.display = 'none';
+            toggleTableBtn.textContent = 'Show Table View';
+        }
+    });
+
+    // Sort Logic
+    function sortData(column) {
+        if (currentSortColumn === column) {
+            currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortDirection = 'asc';
+        }
+
+        // Update Sorting Icons visually
+        document.getElementById('usCity-icon').textContent = '⇕';
+        document.getElementById('uaCity-icon').textContent = '⇕';
+        
+        const activeIcon = document.getElementById(column + '-icon');
+        activeIcon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+        activeIcon.style.color = '#0057B7'; 
+
+        // Sort the main data array
+        sisterCities.sort((a, b) => {
+            let valA = a[column].toLowerCase();
+            let valB = b[column].toLowerCase();
+            
+            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        applyFilterAndRender();
+    }
+
+    // Filter and Render Logic
+    function applyFilterAndRender() {
+        const searchTerm = searchInput.value.toLowerCase();
+        
+        const filteredData = sisterCities.filter(pair => {
+            // Retrieve full state name from dictionary, or empty string if not found
+            const fullStateName = stateDictionary[pair.usState] ? stateDictionary[pair.usState].toLowerCase() : "";
+            
+            // Check US City, US State Abbreviation, US State Full Name, and UA City
+            return pair.usCity.toLowerCase().includes(searchTerm) ||
+                   pair.usState.toLowerCase().includes(searchTerm) ||
+                   fullStateName.includes(searchTerm) ||
+                   pair.uaCity.toLowerCase().includes(searchTerm);
+        });
+        
+        renderView(filteredData);
+    }
+
+    // Connect Search Box
+    searchInput.addEventListener('input', applyFilterAndRender);
+
+    // Build the UI
+    function renderView(data) {
+        tableBody.innerHTML = '';
+        currentMapLayers.forEach(layer => map.removeLayer(layer));
+        currentMapLayers = [];
+        
+        if (data.length === 0) {
+            cityTable.style.display = 'none';
+            noResults.style.display = 'block';
+            return;
+        }
+        
+        cityTable.style.display = 'table';
+        noResults.style.display = 'none';
+        
+        data.forEach(pair => {
+            // Merged columns with BOLD State
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${pair.usCity}</strong>, <strong>${pair.usState}</strong></td>
+                <td><strong>${pair.uaCity}</strong></td>
+            `;
+            tableBody.appendChild(row);
+
+            // Using the custom colored SVG pins
+            const usMarker = L.marker([pair.usLat, pair.usLon], { icon: blueIcon })
+                .bindPopup(`<b>${pair.usCity}, ${pair.usState}</b><br>Sister City: ${pair.uaCity}`);
+            
+            const uaMarker = L.marker([pair.uaLat, pair.uaLon], { icon: yellowIcon })
+                .bindPopup(`<b>${pair.uaCity}, Ukraine</b><br>Sister City: ${pair.usCity}, ${pair.usState}`);
+            
+            const connectionLine = L.polyline([
+                [pair.usLat, pair.usLon], 
+                [pair.uaLat, pair.uaLon]
+            ], {
+                color: '#0057B7', 
+                weight: 2,
+                opacity: 0.3,
+                dashArray: '5, 5' 
+            });
+
+            usMarker.addTo(map);
+            uaMarker.addTo(map);
+            connectionLine.addTo(map);
+            
+            currentMapLayers.push(usMarker, uaMarker, connectionLine);
+        });
+
+        // Fit map bounds
+        if (currentMapLayers.length > 0) {
+            const group = new L.featureGroup(currentMapLayers);
+            map.fitBounds(group.getBounds(), { padding: [30, 30] });
+        }
+    }
+
+    // Initialize page by sorting US Cities A-Z
+    sortData('usCity');
+
+</script>
+
+</body>
+</html>
