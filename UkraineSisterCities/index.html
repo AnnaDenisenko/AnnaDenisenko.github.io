@@ -57,6 +57,7 @@
             background: transparent;
             border: none;
             filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.4));
+            transition: opacity 0.3s ease; /* Smooth fade for map pins */
         }
 
         .search-box {
@@ -146,9 +147,25 @@
             margin-left: 6px;
             color: #999;
         }
+
+        /* Interactive Row Styling */
+        .city-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
         
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background-color: #f8f9fa; }
+        .city-row:last-child td { border-bottom: none; }
+        
+        /* Hover Effect */
+        .city-row:hover { 
+            background-color: #f1f8ff; 
+        }
+
+        /* Selected State Styling */
+        .city-row.selected-row {
+            background-color: #e2f0fc;
+            box-shadow: inset 4px 0 0 var(--ukraine-blue);
+        }
         
         .no-results {
             text-align: center;
@@ -273,7 +290,7 @@
             </svg>`;
         
         return L.divIcon({
-            className: 'custom-pin', // Uses CSS to remove background and add shadow
+            className: 'custom-pin', 
             html: svgTemplate,
             iconSize: [32, 32],
             iconAnchor: [16, 32],
@@ -281,12 +298,12 @@
         });
     };
 
-    // Define colors
     const blueIcon = createMarkerIcon('#0057B7'); // US Blue
-    const yellowIcon = createMarkerIcon('#FFD000'); // Pleasant Yellow
+    const yellowIcon = createMarkerIcon('#FFD000'); // Ukraine Yellow
 
-    // Map and Data State
-    let currentMapLayers = []; 
+    // State Tracking
+    let currentRenderedItems = []; // Tracks { pair, row, mapElements }
+    let selectedPairs = new Set(); // Tracks active selections
     let currentSortColumn = '';
     let currentSortDirection = '';
 
@@ -317,6 +334,44 @@
             toggleTableBtn.textContent = 'Show Table View';
         }
     });
+
+    // Row Selection & Opacity Update Logic
+    function handleRowClick(clickedItem) {
+        // Toggle selection state
+        if (selectedPairs.has(clickedItem.pair)) {
+            selectedPairs.delete(clickedItem.pair);
+            clickedItem.row.classList.remove('selected-row');
+        } else {
+            selectedPairs.add(clickedItem.pair);
+            clickedItem.row.classList.add('selected-row');
+        }
+        
+        updateMapOpacities();
+    }
+
+    function updateMapOpacities() {
+        const hasSelection = selectedPairs.size > 0;
+        
+        currentRenderedItems.forEach(item => {
+            const isSelected = selectedPairs.has(item.pair);
+            
+            // Set capacity/opacity. If nothing is selected, everything is visible.
+            // If something is selected, unselected items drop to 0.013.
+            const opacityMarker = (!hasSelection || isSelected) ? 1 : 0.013;
+            const opacityLine = (!hasSelection || isSelected) ? 0.3 : 0.013;
+
+            item.mapElements.usMarker.setOpacity(opacityMarker);
+            item.mapElements.uaMarker.setOpacity(opacityMarker);
+            
+            // Lines are updated via setStyle in Leaflet
+            item.mapElements.connectionLine.setStyle({ opacity: opacityLine });
+            
+            // Bring selected lines to front so they aren't hidden behind dimmed lines
+            if (isSelected && item.mapElements.connectionLine.bringToFront) {
+                item.mapElements.connectionLine.bringToFront();
+            }
+        });
+    }
 
     // Sort Logic
     function sortData(column) {
@@ -353,10 +408,8 @@
         const searchTerm = searchInput.value.toLowerCase();
         
         const filteredData = sisterCities.filter(pair => {
-            // Retrieve full state name from dictionary, or empty string if not found
             const fullStateName = stateDictionary[pair.usState] ? stateDictionary[pair.usState].toLowerCase() : "";
             
-            // Check US City, US State Abbreviation, US State Full Name, and UA City
             return pair.usCity.toLowerCase().includes(searchTerm) ||
                    pair.usState.toLowerCase().includes(searchTerm) ||
                    fullStateName.includes(searchTerm) ||
@@ -366,14 +419,19 @@
         renderView(filteredData);
     }
 
-    // Connect Search Box
     searchInput.addEventListener('input', applyFilterAndRender);
 
     // Build the UI
     function renderView(data) {
+        // Clear previous renders
         tableBody.innerHTML = '';
-        currentMapLayers.forEach(layer => map.removeLayer(layer));
-        currentMapLayers = [];
+        currentRenderedItems.forEach(item => {
+            map.removeLayer(item.mapElements.usMarker);
+            map.removeLayer(item.mapElements.uaMarker);
+            map.removeLayer(item.mapElements.connectionLine);
+        });
+        currentRenderedItems = [];
+        selectedPairs.clear(); // Reset selection on a new filter/render
         
         if (data.length === 0) {
             cityTable.style.display = 'none';
@@ -385,15 +443,16 @@
         noResults.style.display = 'none';
         
         data.forEach(pair => {
-            // Merged columns with BOLD State
+            // Create Table Row
             const row = document.createElement('tr');
+            row.className = 'city-row';
             row.innerHTML = `
                 <td><strong>${pair.usCity}</strong>, <strong>${pair.usState}</strong></td>
                 <td><strong>${pair.uaCity}</strong></td>
             `;
             tableBody.appendChild(row);
 
-            // Using the custom colored SVG pins
+            // Create Map Elements
             const usMarker = L.marker([pair.usLat, pair.usLon], { icon: blueIcon })
                 .bindPopup(`<b>${pair.usCity}, ${pair.usState}</b><br>Sister City: ${pair.uaCity}`);
             
@@ -414,12 +473,18 @@
             uaMarker.addTo(map);
             connectionLine.addTo(map);
             
-            currentMapLayers.push(usMarker, uaMarker, connectionLine);
+            // Store item reference for interactions
+            const item = { pair, row, mapElements: { usMarker, uaMarker, connectionLine } };
+            currentRenderedItems.push(item);
+
+            // Attach click event for row selection
+            row.addEventListener('click', () => handleRowClick(item));
         });
 
-        // Fit map bounds
-        if (currentMapLayers.length > 0) {
-            const group = new L.featureGroup(currentMapLayers);
+        // Fit map bounds if elements exist
+        if (currentRenderedItems.length > 0) {
+            const markers = currentRenderedItems.flatMap(i => [i.mapElements.usMarker, i.mapElements.uaMarker]);
+            const group = new L.featureGroup(markers);
             map.fitBounds(group.getBounds(), { padding: [30, 30] });
         }
     }
