@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive exercises: Pareto efficiency &amp; utilitarianism</title>
+<style>
+:root{
+  --bg:#f7f6f3; --card:#fff; --ink:#1f2330; --muted:#6a6f7d; --line:#e3e1dc;
+  --purple:#6b3fa0; --purple-l:rgba(107,63,160,.14); --orange:#d9822b; --green:#2e8b57;
+  --red:#c0392b; --blue:#3b6fb6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
+a.course{display:inline-block;font-size:.9rem;color:var(--purple);text-decoration:none;margin-bottom:4px}
+a.course:hover{text-decoration:underline}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:1.7rem;margin:.2em 0 .1em}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.defs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.defs .card h3{margin:0 0 4px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.defs .card p{margin:0;font-size:.95rem}
+.defs .card.u h3{color:var(--orange)}
+ul.check{list-style:none;margin:6px 0 0;padding:0}
+ul.check li{position:relative;padding-left:26px;margin:4px 0;font-size:.95rem}
+ul.check li::before{content:"✓";position:absolute;left:0;top:1px;width:18px;height:18px;border-radius:4px;background:var(--green);color:#fff;font-size:.75rem;line-height:18px;text-align:center}
+.defs .card.e h3{color:var(--green)}
+.topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dots button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:.85rem;color:var(--ink)}
+.dots button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.dots button.done:not(.on){background:#e9f5ee;border-color:#9fd2b5}
+.meta{color:var(--muted);font-size:.9rem}
+.lvl{letter-spacing:2px;color:var(--purple)}
+.blocks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"table chart" "quest chart";grid-template-rows:auto 1fr;gap:14px}
+.b-table{grid-area:table}.b-chart{grid-area:chart;align-self:start;position:sticky;top:12px}.b-quest{grid-area:quest}
+.blocks h2{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+@media(max-width:860px){
+  .defs{grid-template-columns:1fr}
+  .blocks{grid-template-columns:1fr;grid-template-areas:"table" "chart" "quest"}
+  .b-chart{position:static}
+}
+/* table */
+.wtable{border-collapse:separate;border-spacing:0 4px;margin:4px auto;font-size:1rem}
+.wtable th{font-weight:400;text-align:center;padding:4px 14px 8px;border-bottom:1px solid #333;line-height:1.25;vertical-align:bottom}
+.wtable td{text-align:center;padding:5px 14px;font-variant-numeric:tabular-nums}
+.wtable td:first-child,.wtable th:first-child{text-align:left;font-weight:600}
+.wtable th.cur,.wtable td.cur{background:#f1eff7}
+.wtable tbody tr:first-child td{padding-top:10px}
+.wtable [data-pid]{cursor:default}
+.note{font-size:.85rem;color:var(--muted);text-align:center;margin:8px 0 0}
+.badge{display:inline-block;font-size:.72rem;background:#e7e1f1;color:var(--purple);border-radius:99px;padding:1px 8px;margin-top:4px}
+/* chart */
+#plot svg{width:100%;height:auto;display:block;max-width:480px;margin:0 auto;user-select:none;-webkit-user-select:none}
+#plot.d3{cursor:grab;touch-action:pan-y}
+#plot.d3:active{cursor:grabbing}
+.ctrl{display:flex;gap:10px;align-items:center;justify-content:center;font-size:.85rem;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.ctrl input{width:110px}
+.ctrl button{font:inherit;font-size:.85rem;padding:2px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:10px;justify-content:center}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:50%}
+.lg .dk{background:#222}.lg .bl{background:var(--blue)}.lg .pu{background:var(--purple)}
+.lg .halo{border:2px dashed var(--orange);background:none}
+.lg .ring{border:2.5px solid var(--green);background:none}
+.pt.hl .core{stroke:#000;stroke-width:3}
+/* questions */
+.step{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:#fff}
+.step.locked{display:none}
+.qhead{display:flex;gap:10px;margin-bottom:10px;font-weight:600}
+.qnum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fcfcfb}
+.opt:hover{border-color:#b9a9d6}
+.opt input{accent-color:var(--purple)}
+.opt .ov{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.opt.right{border-color:var(--green);background:#eaf6ef}
+.opt.miss{border-color:var(--red);background:#fbeceb}
+.opt.dis{cursor:default}
+button.p{font:inherit;background:var(--purple);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+button.p:disabled{opacity:.4;cursor:not-allowed}
+button.s{font:inherit;background:#fff;color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:6px 14px;cursor:pointer}
+button.lnk{font:inherit;background:none;border:0;color:var(--purple);text-decoration:underline;cursor:pointer;padding:0}
+.fb{margin-top:10px;border-radius:8px;padding:10px 12px;font-size:.95rem}
+.fb.ok{background:#eaf6ef;border-left:4px solid var(--green)}
+.fb.bad{background:#fbeceb;border-left:4px solid var(--red)}
+.fb.info{background:#f3f0f9;border-left:4px solid var(--purple)}
+.fb ul{margin:.4em 0 .4em 1.1em;padding:0}
+.fb li{margin:.25em 0}
+.fb p{margin:.5em 0}
+.fb .row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;align-items:center}
+.nav .hint{color:var(--muted);font-size:.9rem;text-align:center;flex:1}
+footer{margin-top:30px;color:var(--muted);font-size:.8rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- link to course landing page -->
+  <a class="course" href="/BScIBPPOLITICALSCIENCE/">← Copenhagen Business School: BSc IBP POLITICAL SCIENCE</a>
+  <h1>Pareto welfarism &amp; utilitarianism</h1>
+  <p class="sub">Practice exercises. No grades; move on whenever you like.</p>
+
+  <div class="defs">
+    <div class="card"><h3>Pareto improvement</h3><p>Policy <i>y</i> is a Pareto improvement over <i>x</i> if:</p>
+      <ul class="check"><li>no one is worse off under <i>y</i> than under <i>x</i></li><li>at least one person is strictly better off</li></ul></div>
+    <div class="card e"><h3>Pareto efficient</h3><p>No available policy is a Pareto improvement over it.</p></div>
+    <div class="card u"><h3>Utilitarian optimum</h3><p>The policy with the highest total welfare (sum of utilities).</p></div>
+  </div>
+
+  <div class="topbar">
+    <div class="dots" id="dots"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="blocks">
+    <section class="card b-table"><h2>The society</h2><div id="table"></div></section>
+    <section class="card b-chart"><h2>Utility space</h2><div id="plot"></div><div class="ctrl" id="ctrl"></div><div class="legend" id="legend"></div></section>
+    <section class="b-quest"><div id="qs"></div></section>
+  </div>
+
+  <div class="nav">
+    <button class="s" id="prev">← Previous</button>
+    <div class="hint" id="hint"></div>
+    <button class="p" id="next">Next exercise →</button>
+  </div>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const RAW=[
+ {lvl:1,people:['Ann','Bob'],pol:[['cur',2,2],['a',10,0],['b',4,4],['c',5,1]]},
+ {lvl:1,people:['Ann','Bob'],pol:[['cur',4,2],['a',8,1],['b',5,3],['c',5,2]]},
+ {lvl:2,people:['Ann','Bob'],pol:[['cur',2,6],['a',10,0],['b',1,5],['c',4,3]]},
+ {lvl:2,people:['Ann','Bob'],pol:[['cur',2,2],['a',10,0],['at',5,5],['b',3,4]]},
+ {lvl:3,people:['Ann','Bob'],pol:[['cur',3,3],['a',7,1],['b',4,5],['c',1,7],['d',4,3]]},
+ {lvl:3,people:['Ann','Bob'],pol:[['cur',6,4],['a',3,6],['b',8,1],['c',5,4],['d',7,3]]},
+ {lvl:3,people:['Ann','Bob'],pol:[['cur',3,1],['a',2,9],['at',6,5],['b',6,3],['c',8,2]]},
+ {lvl:4,people:['Ann','Bob'],pol:[['cur',4,4],['a',9,1],['b',6,5],['c',7,3],['d',3,7],['e',5,5]]},
+ {lvl:4,people:['Ann','Bob'],pol:[['cur',5,2],['a',5,6],['b',8,2],['c',6,5],['d',4,8],['e',8,3]],
+  tips:{q3:'<p><b>Watch out for weak domination:</b> policy <i>b</i> gives (8, 2) and policy <i>e</i> gives (8, 3). Ann is exactly as well off, Bob is strictly better off, so <i>e</i> is a Pareto improvement over <i>b</i>. Being tied for someone is not enough to escape domination.</p>'}},
+ {lvl:5,people:['Ann','Bob','Cat'],pol:[['cur',2,2,2],['a',8,1,1],['b',3,3,2],['c',2,5,2],['d',1,6,4],['e',3,4,3]],
+  tips:{q2:'<p>In the 3D picture, Pareto improvements are the policies inside the purple box that starts at the current policy and extends up in all three directions (the faces of the box count).</p>'}}
+];
+const sum=v=>v.reduce((a,b)=>a+b,0);
+const dom=(y,x)=>y.every((t,i)=>t>=x[i])&&y.some((t,i)=>t>x[i]);
+const EX=RAW.map(r=>{
+  const ex={...r,dim:r.people.length,tips:r.tips||{}};
+  ex.pol=r.pol.map(([id,...v])=>({id,v}));
+  ex.by=Object.fromEntries(ex.pol.map(p=>[p.id,p]));
+  const cur=ex.pol[0], tot={};
+  ex.pol.forEach(p=>tot[p.id]=sum(p.v));
+  const mx=Math.max(...Object.values(tot));
+  const dominators={};
+  ex.pol.forEach(p=>dominators[p.id]=ex.pol.filter(q=>q!==p&&dom(q.v,p.v)).map(q=>q.id));
+  ex.A={tot,mx,
+    util:ex.pol.filter(p=>tot[p.id]===mx).map(p=>p.id),
+    pi:ex.pol.slice(1).filter(p=>dom(p.v,cur.v)).map(p=>p.id),
+    dominators,
+    eff:ex.pol.filter(p=>!dominators[p.id].length).map(p=>p.id)};
+  return ex;
+});
+
+/* ---------- text helpers ---------- */
+const lab=id=>id==='cur'?'current':id==='at'?'<i>a</i> with transfer':`<i>${id}</i>`;
+const POL=id=>id==='cur'?'the current policy':id==='at'?'policy <i>a</i> with transfer':`policy <i>${id}</i>`;
+const optName=id=>id==='cur'?'Current policy':id==='at'?'Policy <i>a</i> with transfer':`Policy <i>${id}</i>`;
+const B=ids=>ids.map(i=>`<b>${lab(i)}</b>`);
+const J=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const sg=n=>n>0?'+'+n:n<0?'−'+Math.abs(n):'±0';
+const vtxt=v=>'('+v.join(', ')+')';
+
+/* ---------- question definitions ---------- */
+function question(ex,k){
+  const A=ex.A, P=ex.pol, cur=P[0], pe=ex.people;
+  if(k===0){
+    const text='Which policy is the <b>utilitarian optimum</b>? <span style="font-weight:400;color:var(--muted)">(Select all if tied.)</span>';
+    const short=A.util.length===1
+      ? `Policy <b>${lab(A.util[0])}</b> has the highest total (${A.mx}).`
+      : `${J(B(A.util))} tie for the highest total (${A.mx}).`;
+    let long=`<p>Sum utilities under each policy:</p><ul>`;
+    P.forEach(p=>{long+=`<li>${lab(p.id)}: ${p.v.join(' + ')} = <b>${A.tot[p.id]}</b>${A.util.includes(p.id)?' ← highest':''}</li>`;});
+    long+='</ul>';
+    if(A.util.length>1) long+=`<p>Utilitarianism is indifferent between tied policies: only the sum matters, not who gets what.</p>`;
+    if(ex.by.at) long+=`<p>A transfer leaves the total unchanged, so <i>a</i> and <i>a</i> with transfer always tie.</p>`;
+    const optNotPI=A.util.filter(i=>i!=='cur'&&!A.pi.includes(i));
+    if(optNotPI.length) long+=`<p>The optimum need not be a Pareto improvement: ${J(optNotPI.map(POL))} ${optNotPI.length>1?'make':'makes'} someone worse off than today.</p>`;
+    return {text,opts:P.map(p=>p.id),none:false,ans:A.util,short,long:long+(ex.tips.q1||'')};
+  }
+  if(k===1){
+    const text='Which policies are <b>Pareto improvements</b> over the current policy?';
+    const short=A.pi.length
+      ? `${J(B(A.pi))}: no one loses, someone gains.`
+      : 'None: every alternative makes someone worse off.';
+    let long=`<ul>`;
+    P.slice(1).forEach(p=>{
+      const parts=pe.map((n,i)=>{const d=p.v[i]-cur.v[i];return `${n} ${cur.v[i]} → ${p.v[i]} (${d===0?'unchanged':sg(d)})`;});
+      const lose=pe.filter((n,i)=>p.v[i]<cur.v[i]), gain=pe.filter((n,i)=>p.v[i]>cur.v[i]), same=pe.filter((n,i)=>p.v[i]===cur.v[i]);
+      let verdict;
+      if(lose.length) verdict=`${J(lose)} ${lose.length>1?'are':'is'} worse off → <b>not</b> a Pareto improvement.`;
+      else verdict=`nobody is worse off${same.length?` (${J(same)} unchanged, which is allowed)`:''} and ${J(gain)} ${gain.length>1?'are':'is'} better off → <b>Pareto improvement</b>.`;
+      long+=`<li><b>${lab(p.id)}</b>: ${parts.join(', ')}. ${verdict}</li>`;
+    });
+    long+='</ul>';
+    if(!A.pi.length) long+=`<p>"None" is a valid answer: every change here hurts someone.</p>`;
+    if(ex.by.at&&!A.pi.includes('a')&&A.pi.includes('at')) long+=`<p>Policy <i>a</i> alone hurts someone, but with a compensating transfer it is a Pareto improvement.</p>`;
+    long+=`<p>In the picture: the shaded ${ex.dim===3?'box':'region'}.</p>`;
+    return {text,opts:P.slice(1).map(p=>p.id),none:true,ans:A.pi,short,long:long+(ex.tips.q2||'')};
+  }
+  const text='Which policies are <b>Pareto efficient</b>? <span style="font-weight:400;color:var(--muted)">(Among those shown.)</span>';
+  const bad=P.filter(p=>A.dominators[p.id].length);
+  const short=`Efficient: ${J(B(A.eff))}.`+(bad.length?` Dominated: ${bad.map(p=>`<b>${lab(p.id)}</b> (by ${lab(A.dominators[p.id][0])})`).join(', ')}.`:'');
+  let long=`<ul>`;
+  P.forEach(p=>{
+    if(A.dominators[p.id].length){
+      const q=ex.by[A.dominators[p.id][0]];
+      const cmp=pe.map((n,i)=>`${n} ${q.v[i]} ${q.v[i]>p.v[i]?'>':'='} ${p.v[i]}`).join(', ');
+      const more=A.dominators[p.id].length>1?` (also dominated by ${J(A.dominators[p.id].slice(1).map(i=>`<b>${lab(i)}</b>`))})`:'';
+      long+=`<li><b>${lab(p.id)}</b> ${vtxt(p.v)}: <b>not efficient</b>. ${POL(q.id)} ${vtxt(q.v)} is a Pareto improvement (${cmp})${more}.</li>`;
+    } else {
+      long+=`<li><b>${lab(p.id)}</b> ${vtxt(p.v)}: <b>efficient</b>. Every other policy hurts someone.</li>`;
+    }
+  });
+  long+='</ul>';
+  const worstEff=A.eff.map(i=>ex.by[i]).sort((x,y)=>Math.min(...x.v)-Math.min(...y.v))[0];
+  const mi=worstEff.v.indexOf(Math.min(...worstEff.v));
+  long+=`<p>Efficiency is not fairness: ${POL(worstEff.id)} is efficient though ${pe[mi]} gets only ${worstEff.v[mi]}.</p>`;
+  if(A.eff.includes('cur')) long+=`<p>The current policy is itself efficient: no Pareto improvement exists.</p>`;
+  long+=`<p>"None" is never right here: the utilitarian optimum is always efficient.</p>`;
+  return {text,opts:P.map(p=>p.id),none:true,ans:A.eff,short,long:long+(ex.tips.q3||'')};
+}
+
+/* ---------- state ---------- */
+let cur=0;
+const S=[];
+const st=i=>S[i]||(S[i]={steps:[0,1,2].map(()=>({status:'open',sel:[],more:false}))});
+const done=s=>s.status==='correct'||s.status==='explained';
+function stage(i){let n=0;for(const s of st(i).steps){if(done(s))n++;else break;}return n;}
+const $=s=>document.querySelector(s);
+
+/* ---------- table ---------- */
+function renderTable(ex){
+  const head=ex.pol.map(p=>{
+    const t=p.id==='cur'?'current<br>policy':p.id==='at'?'<i>a</i> with<br>transfer':`policy <i>${p.id}</i>`;
+    return `<th data-pid="${p.id}" class="${p.id==='cur'?'cur':''}">${t}</th>`;}).join('');
+  const rows=ex.people.map((n,i)=>`<tr><td>${n}</td>${ex.pol.map(p=>`<td data-pid="${p.id}" class="${p.id==='cur'?'cur':''}">${p.v[i]}</td>`).join('')}</tr>`).join('');
+  let note='<span class="badge">status quo: current policy</span>';
+  if(ex.by.at){
+    const a=ex.by.a.v, t=ex.by.at.v, d=t.map((x,i)=>x-a[i]);
+    const gi=d.findIndex(x=>x>0), li=d.findIndex(x=>x<0);
+    note+=`<br>Transfer: ${ex.people[li]} gives ${d[gi]} to ${ex.people[gi]} (the total stays the same).`;
+  }
+  $('#table').innerHTML=`<table class="wtable"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table><p class="note">${note}</p>`;
+}
+
+/* ---------- plots ---------- */
+function pstyle(ex,p,stg){
+  const A=ex.A;
+  let fill=p.id==='cur'?'#222':'#3b6fb6';
+  if(stg>=2&&A.pi.includes(p.id))fill='#6b3fa0';
+  const eff=stg>=3&&A.eff.includes(p.id);
+  return {fill,util:stg>=1&&A.util.includes(p.id),eff,faded:stg>=3&&!eff};
+}
+const clabel=id=>id==='cur'?'current':id==='at'?'a + transfer':id;
+function plot2d(ex,stg){
+  const W=380,H=380,m={l:44,r:18,t:18,b:42},M=10,R=M+1.6,Lm=R-.4;
+  const sx=x=>m.l+x/R*(W-m.l-m.r), sy=y=>H-m.b-y/R*(H-m.t-m.b);
+  const c=ex.pol[0].v, A=ex.A;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Utility space of the policies"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker></defs>`;
+  for(let t=0;t<=M;t+=2){
+    s+=`<line x1="${sx(t)}" y1="${sy(0)}" x2="${sx(t)}" y2="${sy(Lm)}" stroke="#eee"/><line x1="${sx(0)}" y1="${sy(t)}" x2="${sx(Lm)}" y2="${sy(t)}" stroke="#eee"/>`;
+    s+=`<line x1="${sx(t)}" y1="${sy(0)-4}" x2="${sx(t)}" y2="${sy(0)+4}" stroke="#333"/><text x="${sx(t)}" y="${sy(0)+17}" font-size="11" text-anchor="middle" fill="#555">${t}</text>`;
+    s+=`<line x1="${sx(0)-4}" y1="${sy(t)}" x2="${sx(0)+4}" y2="${sy(t)}" stroke="#333"/><text x="${sx(0)-9}" y="${sy(t)+4}" font-size="11" text-anchor="end" fill="#555">${t}</text>`;
+  }
+  if(stg>=2){
+    const x0=sx(c[0]),y0=sy(Lm),w=sx(Lm)-x0,h=sy(c[1])-y0;
+    s+=`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#6b3fa0" fill-opacity=".14" stroke="#6b3fa0" stroke-opacity=".35"/>`;
+    if(w>110&&h>60) s+=`<text font-size="11" fill="#6b3fa0" text-anchor="middle"><tspan x="${x0+w*.62}" y="${y0+h*.28}">Pareto improvements</tspan><tspan x="${x0+w*.62}" dy="13">over current</tspan></text>`;
+  }
+  if(stg>=1){
+    const T=A.mx,p1=[Math.max(0,T-Lm),Math.min(T,Lm)],p2=[Math.min(T,Lm),Math.max(0,T-Lm)];
+    s+=`<line x1="${sx(p1[0])}" y1="${sy(p1[1])}" x2="${sx(p2[0])}" y2="${sy(p2[1])}" stroke="#d9822b" stroke-width="2" stroke-dasharray="6 4"/>`;
+    const mx=sx(p1[0])+(sx(p2[0])-sx(p1[0]))*.82+6,my=sy(p1[1])+(sy(p2[1])-sy(p1[1]))*.82-6;
+    s+=`<text x="${mx}" y="${my}" font-size="11" fill="#b8651a" text-anchor="middle" transform="rotate(45 ${mx} ${my})" paint-order="stroke" stroke="#fff" stroke-width="3">total = ${T}</text>`;
+  }
+  s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(R-.2)}" y2="${sy(0)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(0)}" y2="${sy(R-.2)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  s+=`<text x="${W-m.r}" y="${sy(0)-9}" font-size="13" font-weight="600" text-anchor="end">${ex.people[0]}</text><text x="${sx(0)+10}" y="${m.t+6}" font-size="13" font-weight="600">${ex.people[1]}</text>`;
+  // label placement
+  const placed=[],pts=ex.pol.map(p=>({x:sx(p.v[0]),y:sy(p.v[1])}));
+  const cands=[[9,-9,'start'],[9,17,'start'],[-9,-9,'end'],[-9,17,'end'],[0,-15,'middle'],[0,24,'middle']];
+  let lbl='',dots='';
+  ex.pol.forEach((p,i)=>{
+    const t=clabel(p.id),w=6.4*t.length+4,{x,y}=pts[i];
+    let best=null;
+    for(const [dx,dy,an] of cands){
+      const x0=an==='start'?x+dx:an==='end'?x+dx-w:x+dx-w/2, box=[x0,y+dy-11,x0+w,y+dy+3];
+      const hit=placed.some(b=>!(box[2]<b[0]||box[0]>b[2]||box[3]<b[1]||box[1]>b[3]))
+        ||pts.some((q,j)=>j!==i&&q.x>box[0]-8&&q.x<box[2]+8&&q.y>box[1]-8&&q.y<box[3]+8)
+        ||box[0]<2||box[2]>W-2;
+      if(!hit){best={dx,dy,an,box};break;}
+      if(!best)best={dx,dy,an,box};
+    }
+    placed.push(best.box);
+    const st=pstyle(ex,p,stg);
+    lbl+=`<text x="${x+best.dx}" y="${y+best.dy}" font-size="12" text-anchor="${best.an}" ${p.id==='cur'?'':'font-style="italic"'} paint-order="stroke" stroke="#fff" stroke-width="3" opacity="${st.faded?.5:1}">${t}</text>`;
+    dots+=`<g class="pt" data-pid="${p.id}" opacity="${st.faded?.5:1}">${st.util?`<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#d9822b" stroke-width="2" stroke-dasharray="3 2.5"/>`:''}${st.eff?`<circle cx="${x}" cy="${y}" r="8.5" fill="none" stroke="#2e8b57" stroke-width="2.5"/>`:''}<circle class="core" cx="${x}" cy="${y}" r="5.5" fill="${st.fill}"/></g>`;
+  });
+  return s+dots+lbl+'</svg>';
+}
+
+const view={yaw:.75,pitch:.45};
+function plot3d(ex,stg){
+  const W=440,H=420,cx=220,cy=215,Sc=23,cyw=Math.cos(view.yaw),syw=Math.sin(view.yaw),cp=Math.cos(view.pitch),sp=Math.sin(view.pitch);
+  const pr=(X,Y,Z)=>{const x=X-5,y=Y-5,z=Z-5,x1=x*cyw-y*syw,y1=x*syw+y*cyw;return{x:cx+Sc*x1,y:cy-Sc*(y1*sp+z*cp),d:y1*cp-z*sp};};
+  const L=(a,b,stroke,w=1,extra='')=>{const p=pr(...a),q=pr(...b);return `<line x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;};
+  const poly=(pts3,fill,fo,stroke,so,extra='')=>`<polygon points="${pts3.map(p=>{const q=pr(...p);return q.x.toFixed(1)+','+q.y.toFixed(1);}).join(' ')}" fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-opacity="${so}" ${extra}/>`;
+  const A=ex.A,c=ex.pol[0].v;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="3D utility space (drag to rotate)"><defs><marker id="ar3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker></defs>`;
+  for(let t=0;t<=10;t+=2){s+=L([t,0,0],[t,10,0],'#e6e6e6')+L([0,t,0],[10,t,0],'#e6e6e6');}
+  const corners=[];for(let i=0;i<8;i++)corners.push([(i&1)*10,((i>>1)&1)*10,((i>>2)&1)*10]);
+  const edges=[];for(let i=0;i<8;i++)for(let k=0;k<3;k++)if(!(i&(1<<k)))edges.push([corners[i],corners[i|(1<<k)]]);
+  edges.forEach(([a,b])=>s+=L(a,b,'#cfcfcf'));
+  // purple box
+  if(stg>=2){
+    const lo=c,hi=[10,10,10],faces=[];
+    for(let k=0;k<3;k++){const i=(k+1)%3,j=(k+2)%3;[lo[k],hi[k]].forEach(v=>{
+      const f=[[lo[i],lo[j]],[hi[i],lo[j]],[hi[i],hi[j]],[lo[i],hi[j]]].map(([u,w])=>{const p=[0,0,0];p[k]=v;p[i]=u;p[j]=w;return p;});
+      faces.push({f,d:f.reduce((a,p)=>a+pr(...p).d,0)/4});});}
+    faces.sort((a,b)=>b.d-a.d).forEach(o=>s+=poly(o.f,'#6b3fa0',.1,'#6b3fa0',.45));
+  }
+  // utilitarian plane
+  if(stg>=1){
+    const T=A.mx,ip=[];
+    edges.forEach(([a,b])=>{const sa=sum(a),sb=sum(b);if(sa===sb)return;const t=(T-sa)/(sb-sa);if(t>=0&&t<=1){const p=a.map((v,i)=>v+t*(b[i]-v));if(!ip.some(q=>q.every((x,i)=>Math.abs(x-p[i])<1e-6)))ip.push(p);}});
+    if(ip.length>=3){
+      const pp=ip.map(p=>pr(...p)),mx=pp.reduce((a,p)=>a+p.x,0)/pp.length,my=pp.reduce((a,p)=>a+p.y,0)/pp.length;
+      const ord=ip.map((p,i)=>({p,a:Math.atan2(pp[i].y-my,pp[i].x-mx)})).sort((a,b)=>a.a-b.a).map(o=>o.p);
+      s+=poly(ord,'#d9822b',.16,'#d9822b',.9,'stroke-width="1.8" stroke-dasharray="6 4"');
+    }
+  }
+  // axes
+  const ax=[[[11.4,0,0],'Ann'],[[0,11.4,0],'Bob'],[[0,0,11.4],'Cat']];
+  ax.forEach(([e,n])=>{s+=L([0,0,0],e,'#222',1.8,'marker-end="url(#ar3)"');const q=pr(...e);s+=`<text x="${q.x+(q.x>=cx?6:-6)}" y="${q.y+4}" font-size="13" font-weight="600" text-anchor="${q.x>=cx?'start':'end'}" paint-order="stroke" stroke="#fff" stroke-width="3">${n}</text>`;});
+  [5,10].forEach(t=>{[[[t,0,0],[0,1.1,0]],[[0,t,0],[1.1,0,0]],[[0,0,t],[1.1,0,0]]].forEach(([p,o])=>{const q=pr(p[0]-o[0]*0,p[1],p[2]);s+=`<text x="${q.x-6}" y="${q.y+14}" font-size="10" fill="#777" text-anchor="end">${t}</text>`;});});
+  // points
+  const items=ex.pol.map(p=>({p,q:pr(...p.v),f:pr(p.v[0],p.v[1],0)})).sort((a,b)=>b.q.d-a.q.d);
+  let dots='',lbl='';
+  items.forEach(({p,q,f})=>{
+    const st=pstyle(ex,p,stg),x=q.x.toFixed(1),y=q.y.toFixed(1);
+    dots+=`<g class="pt" data-pid="${p.id}" opacity="${st.faded?.5:1}"><line x1="${x}" y1="${y}" x2="${f.x.toFixed(1)}" y2="${f.y.toFixed(1)}" stroke="#999" stroke-dasharray="2 3"/><ellipse cx="${f.x.toFixed(1)}" cy="${f.y.toFixed(1)}" rx="4" ry="2" fill="#bbb"/>${st.util?`<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#d9822b" stroke-width="2" stroke-dasharray="3 2.5"/>`:''}${st.eff?`<circle cx="${x}" cy="${y}" r="8.5" fill="none" stroke="#2e8b57" stroke-width="2.5"/>`:''}<circle class="core" cx="${x}" cy="${y}" r="5.5" fill="${st.fill}"/><text x="${q.x+9}" y="${q.y-8}" font-size="12" ${p.id==='cur'?'':'font-style="italic"'} paint-order="stroke" stroke="#fff" stroke-width="3">${clabel(p.id)}</text></g>`;
+  });
+  return s+dots+'</svg>';
+}
+function renderPlot(ex,stg){
+  $('#plot').innerHTML=ex.dim===3?plot3d(ex,stg):plot2d(ex,stg);
+  $('#plot').className=ex.dim===3?'d3':'';
+  let h=`<span class="lg"><i class="dk"></i>current policy</span><span class="lg"><i class="bl"></i>other policies</span>`;
+  if(stg>=1)h+=`<span class="lg"><i class="halo"></i>utilitarian optimum (dashed ${ex.dim===3?'plane':'line'}: same total)</span>`;
+  if(stg>=2)h+=`<span class="lg"><i class="pu"></i>Pareto improvement over current</span>`;
+  if(stg>=3)h+=`<span class="lg"><i class="ring"></i>Pareto efficient (faded = dominated)</span>`;
+  if(ex.by.at)h+=`<span class="lg"><i style="background:none"></i>“a + transfer” = a with transfer</span>`;
+  $('#legend').innerHTML=h;
+}
+function renderCtrl(ex){
+  $('#ctrl').innerHTML=ex.dim===3?`<span>Drag the chart to rotate</span><label>Tilt <input type="range" id="tilt" min="5" max="85" value="${Math.round(view.pitch*57.3)}"></label><button id="reset">Reset view</button>`:'';
+  if(ex.dim===3){
+    $('#tilt').oninput=e=>{view.pitch=e.target.value/57.3;renderPlot(EX[cur],stage(cur));};
+    $('#reset').onclick=()=>{view.yaw=.75;view.pitch=.45;$('#tilt').value=26;renderPlot(EX[cur],stage(cur));};
+  }
+}
+(function drag(){
+  const el=$('#plot');let down=null;
+  el.addEventListener('pointerdown',e=>{if(EX[cur].dim!==3)return;down={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{
+    if(!down)return;
+    view.yaw+=(e.clientX-down.x)*.01;
+    if(e.pointerType==='mouse'){view.pitch=Math.min(1.48,Math.max(.09,view.pitch+(e.clientY-down.y)*.008));const t=$('#tilt');if(t)t.value=Math.round(view.pitch*57.3);}
+    down={x:e.clientX,y:e.clientY};renderPlot(EX[cur],stage(cur));
+  });
+  const up=()=>down=null;el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+})();
+// hover link: table column <-> chart point
+$('#table').addEventListener('mouseover',e=>{const t=e.target.closest('[data-pid]');document.querySelectorAll('.pt.hl').forEach(n=>n.classList.remove('hl'));if(t){const n=document.querySelector(`.pt[data-pid="${t.dataset.pid}"]`);n&&n.classList.add('hl');}});
+$('#table').addEventListener('mouseleave',()=>document.querySelectorAll('.pt.hl').forEach(n=>n.classList.remove('hl')));
+
+/* ---------- questions ---------- */
+function renderQs(){
+  const ex=EX[cur],state=st(cur);let h='';
+  state.steps.forEach((s,k)=>{
+    const visible=k===0||done(state.steps[k-1]);
+    const q=question(ex,k),fin=done(s),sel=new Set(s.sel);
+    const ans=new Set(q.ans.length?q.ans:['none']);
+    const allOpts=q.opts.concat(q.none?['none']:[]);
+    const opts=allOpts.map(id=>{
+      const p=ex.by[id];
+      const name=id==='none'?'None of them':optName(id), val=p?`<span class="ov">${vtxt(p.v)}</span>`:'';
+      let cls='opt';
+      if(fin||s.status==='wrong')cls+=' dis';
+      if(s.status==='explained'||s.status==='correct'){if(ans.has(id))cls+=' right';else if(sel.has(id))cls+=' miss';}
+      return `<label class="${cls}"><input type="checkbox" value="${id}" ${sel.has(id)?'checked':''} ${fin||s.status==='wrong'?'disabled':''}><span>${name}</span>${val}</label>`;
+    }).join('');
+    let act='',fb='';
+    if(s.status==='open')act=`<button class="p" data-act="check" ${s.sel.length?'':'disabled'}>Check answer</button>`;
+    if(s.status==='wrong')fb=`<div class="fb bad"><b>Not quite.</b><div class="row"><button class="p" data-act="again">Try again</button><button class="s" data-act="explain">Explain</button></div></div>`;
+    if(s.status==='correct')fb=`<div class="fb ok"><b>Correct!</b> ${q.short} ${s.more?`<div style="margin-top:6px">${q.long}</div>`:`<button class="lnk" data-act="more">Show detailed explanation</button>`}</div>`;
+    if(s.status==='explained')fb=`<div class="fb info"><b>Explanation.</b> The correct answer: ${q.ans.length?J(B(q.ans)):'<b>none of them</b>'}.${q.long}</div>`;
+    h+=`<div class="step ${visible?'':'locked'}" data-k="${k}"><div class="qhead"><span class="qnum">${k+1}</span><span>${q.text}</span></div><div class="opts">${opts}</div>${act}${fb}</div>`;
+  });
+  $('#qs').innerHTML=h;
+}
+$('#qs').addEventListener('change',e=>{
+  const t=e.target;if(t.type!=='checkbox')return;
+  const stepEl=t.closest('.step'),s=st(cur).steps[+stepEl.dataset.k];
+  let sel=new Set(s.sel);
+  if(t.value==='none')t.checked?sel=new Set(['none']):sel.delete('none');
+  else{t.checked?(sel.add(t.value),sel.delete('none')):sel.delete(t.value);}
+  s.sel=[...sel];
+  stepEl.querySelectorAll('input').forEach(i=>i.checked=sel.has(i.value));
+  const b=stepEl.querySelector('[data-act=check]');if(b)b.disabled=!s.sel.length;
+});
+$('#qs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const k=+b.closest('.step').dataset.k,s=st(cur).steps[k],q=question(EX[cur],k);
+  const act=b.dataset.act;
+  if(act==='check'){
+    const a=new Set(q.ans.length?q.ans:['none']),g=new Set(s.sel);
+    s.status=(a.size===g.size&&[...a].every(x=>g.has(x)))?'correct':'wrong';
+  }
+  if(act==='again'){s.status='open';s.sel=[];}
+  if(act==='explain')s.status='explained';
+  if(act==='more')s.more=true;
+  refresh();
+});
+
+/* ---------- navigation ---------- */
+function refresh(){
+  const ex=EX[cur],stg=stage(cur);
+  renderPlot(ex,stg);renderQs();updateDots();
+  $('#hint').textContent=stg===3?'All three questions done. Continue when ready.':'';
+}
+function updateDots(){
+  document.querySelectorAll('#dots button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',stage(i)===3);});
+  $('#meta').innerHTML=`Exercise ${cur+1} of ${EX.length} &nbsp;·&nbsp; Difficulty <span class="lvl">${'●'.repeat(EX[cur].lvl)}${'○'.repeat(5-EX[cur].lvl)}</span>`;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===EX.length-1;
+  $('#prev').style.opacity=cur===0?.4:1;$('#next').style.opacity=cur===EX.length-1?.4:1;
+}
+function go(i){
+  cur=Math.max(0,Math.min(EX.length-1,i));
+  history.replaceState(null,'','#ex'+(cur+1));
+  renderTable(EX[cur]);renderCtrl(EX[cur]);refresh();
+  window.scrollTo({top:document.querySelector('.topbar').offsetTop-10,behavior:'smooth'});
+}
+$('#dots').innerHTML=EX.map((e,i)=>`<button aria-label="Exercise ${i+1}">${i+1}</button>`).join('');
+$('#dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go([...$('#dots').children].indexOf(b));});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+(function init(){
+  const m=/ex(\d+)/.exec(location.hash);cur=m?Math.max(0,Math.min(EX.length-1,+m[1]-1)):0;
+  renderTable(EX[cur]);renderCtrl(EX[cur]);refresh();
+})();
+</script>
+</body>
+</html>
