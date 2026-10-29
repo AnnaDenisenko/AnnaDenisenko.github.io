@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive exercises: collective action</title>
+<style>
+
+:root{
+  --bg:#f7f6f3; --card:#fff; --ink:#1f2330; --muted:#6a6f7d; --line:#e3e1dc;
+  --purple:#6b3fa0; --purple-l:rgba(107,63,160,.14); --orange:#d9822b; --green:#2e8b57;
+  --red:#c0392b; --blue:#3b6fb6; --colA:#00823c; --colB:#d26e00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
+a.course{display:inline-block;font-size:.9rem;color:var(--purple);text-decoration:none;margin-bottom:4px}
+a.course:hover{text-decoration:underline}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:1.7rem;margin:.2em 0 .1em}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.defs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.defs .card h3{margin:0 0 4px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.defs .card p{margin:0;font-size:.95rem}
+.defs .card.u h3{color:var(--orange)}
+.defs .card.e h3{color:var(--green)}
+.topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dots button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:.85rem;color:var(--ink)}
+.dots button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.dots button.done:not(.on){background:#e9f5ee;border-color:#9fd2b5}
+.meta{color:var(--muted);font-size:.9rem}
+.lvl{letter-spacing:2px;color:var(--purple)}
+.blocks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"sit vis" "quest vis";grid-template-rows:auto 1fr;gap:14px}
+.b-sit{grid-area:sit}.b-vis{grid-area:vis;align-self:start;position:sticky;top:12px}.b-quest{grid-area:quest}
+.blocks h2{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+@media(max-width:860px){
+  .defs{grid-template-columns:1fr}
+  .blocks{grid-template-columns:1fr;grid-template-areas:"sit" "vis" "quest"}
+  .b-vis{position:static}
+}
+.b-sit p{margin:.3em 0}
+.b-sit ul,.b-sit ol{margin:.3em 0 .3em 1.2em;padding:0}
+.b-sit li{margin:.15em 0}
+.facts{list-style:none;margin:8px 0!important;padding:0!important}
+.facts li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0}
+.facts li b{font-variant-numeric:tabular-nums}
+.ranks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
+.ranks h4{margin:0 0 4px;font-size:.9rem}
+.ranks ol{margin:0 0 0 1.2em;padding:0;font-size:.95rem}
+.small{font-size:.88rem;color:var(--muted)}
+.va{color:var(--colA)}.vb{color:var(--colB)}
+/* chart */
+#vis svg{width:100%;height:auto;display:block;max-width:480px;margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:10px;justify-content:center}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:50%}
+.lg i.ln{width:20px;height:0;border-radius:0;border-top:3px solid var(--purple)}
+.lg i.dsh{width:20px;height:0;border-radius:0;border-top:3px dashed #888}
+.lg i.sq{border-radius:3px}
+.cap{font-size:.92rem;text-align:center;margin:10px auto 0;max-width:440px}
+.cap.box{background:#f3f0f9;border-radius:8px;padding:8px 10px}
+/* matrix */
+.mx{border-collapse:collapse;margin:6px auto;font-size:1.1rem}
+.mx td.c{border:1.5px solid #333;width:96px;height:60px;text-align:center;font-variant-numeric:tabular-nums;transition:background .3s}
+.mx.m3 td.c{width:80px;height:54px;font-size:1rem}
+.mx th{font-weight:600;font-size:.95rem;transition:opacity .3s}
+.mx th.col{padding:4px 6px;color:var(--colB)}
+.mx th.row{padding:4px 10px;text-align:right;color:var(--colA)}
+.mx th.g{opacity:.3}
+.mx .plb{color:var(--colB);font-weight:700;text-align:center;padding-bottom:2px;font-size:.95rem}
+.mx .pla{color:var(--colA);font-weight:700;font-size:.95rem;padding-right:4px}
+.mx .pla span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block}
+.mx span.q{color:#c9c9c9}
+.mx .cm{color:#999}
+.mx span.u{color:var(--red)!important;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:700}
+.mx td.c.gray{background:#f2f2f2}
+.mx td.c.gray span{color:#cfcfcf!important}
+.mx span.dim{color:#cfcfcf!important}
+.mx span.u.dim{text-decoration-color:#e7b3ad}
+.mx td.c.ne{background:var(--purple-l);box-shadow:inset 0 0 0 2px var(--purple)}
+.mx span.clk{cursor:pointer;padding:1px 5px;border-radius:4px}
+.mx span.clk:hover{background:#f6e5e3}
+/* questions */
+.step{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:#fff}
+.step.locked{display:none}
+.qhead{display:flex;gap:10px;margin-bottom:10px;font-weight:600}
+.qnum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.muted{font-weight:400;color:var(--muted)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.opts.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.opts.g3 .opt.full{grid-column:1/-1}
+@media(max-width:520px){.opts.g3{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fcfcfb}
+.opt:hover{border-color:#b9a9d6}
+.opt input{accent-color:var(--purple)}
+.opt.right{border-color:var(--green);background:#eaf6ef}
+.opt.miss{border-color:var(--red);background:#fbeceb}
+.opt.dis{cursor:default}
+.numrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.numrow input{font:inherit;width:110px;padding:6px 10px;border:1px solid #cfc8dc;border-radius:8px}
+.numrow input:focus{outline:2px solid var(--purple-l);border-color:var(--purple)}
+.numrow input:disabled{background:#f4f4f2;color:var(--ink)}
+.slrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.slrow input[type=range]{flex:1;min-width:160px;accent-color:var(--purple)}
+.slrow .val{min-width:170px;font-variant-numeric:tabular-nums}
+button.p{font:inherit;background:var(--purple);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+button.p:disabled{opacity:.4;cursor:not-allowed}
+button.s{font:inherit;background:#fff;color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:6px 14px;cursor:pointer}
+button.s.sm{font-size:.82rem;padding:3px 10px}
+button.lnk{font:inherit;background:none;border:0;color:var(--purple);text-decoration:underline;cursor:pointer;padding:0}
+.fb{margin-top:10px;border-radius:8px;padding:10px 12px;font-size:.95rem}
+.fb.ok{background:#eaf6ef;border-left:4px solid var(--green)}
+.fb.bad{background:#fbeceb;border-left:4px solid var(--red)}
+.fb.info{background:#f3f0f9;border-left:4px solid var(--purple)}
+.fb ul{margin:.4em 0 .4em 1.1em;padding:0}
+.fb li{margin:.25em 0}
+.fb p{margin:.5em 0}
+.fb .row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.defn{background:#fff;border:1px solid #d6c8ea;border-left:4px solid var(--purple);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.93rem}
+.defn b.t{color:var(--purple)}
+.pop{animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;align-items:center}
+.nav .hint{color:var(--muted);font-size:.9rem;text-align:center;flex:1}
+footer{margin-top:30px;color:var(--muted);font-size:.8rem;text-align:center}
+
+/* --- additions for Lecture 3 --- */
+.ptab{border-collapse:collapse;margin:4px auto 12px;font-size:.95rem;font-variant-numeric:tabular-nums}
+.ptab th,.ptab td{padding:5px 10px;text-align:center;border-bottom:1px solid var(--line)}
+.ptab th{font-weight:600;font-size:.85rem;color:var(--muted)}
+.ptab td:first-child,.ptab th:first-child{text-align:left;font-weight:600;color:var(--ink)}
+.ptab .hc{background:#f1eff7}
+.ptab .diff td{color:var(--red);font-weight:600;border-bottom:0}
+.ptab .q{color:#c9c9c9}
+.match{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fcfcfb;flex-wrap:wrap}
+.mrow.right{border-color:var(--green);background:#eaf6ef}
+.mrow.miss{border-color:var(--red);background:#fbeceb}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{border:1px solid #cfc8dc;border-radius:99px;padding:2px 10px;font-size:.85rem;cursor:pointer;background:#fff;user-select:none}
+.pill input{display:none}
+.pill.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.pill.dis{cursor:default}
+.subhead{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px;font-weight:600;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="course" href="/teaching/BScIBPPOLITICALSCIENCE/">← Copenhagen Business School: BSc IBP POLITICAL SCIENCE</a>
+  <h1>Collective action, public goods &amp; how to fix them</h1>
+  <p class="sub">Practice exercises for Lecture 3 (Collective Action, Public Goods, and Norms). No grades; move on whenever you like.</p>
+
+  <div class="defs" id="defs"></div>
+
+  <div class="topbar">
+    <div class="dots" id="dots"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="blocks">
+    <section class="card b-sit"><h2 id="sitTitle">The situation</h2><div id="sit"></div></section>
+    <section class="card b-vis"><h2 id="visTitle">Picture</h2><div id="vis"></div><div id="legend" class="legend"></div><div id="viscap"></div></section>
+    <section class="b-quest"><div id="qs"></div></section>
+  </div>
+
+  <div class="nav">
+    <button class="s" id="prev">← Previous</button>
+    <div class="hint" id="hint"></div>
+    <button class="p" id="next">Next exercise →</button>
+  </div>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const J=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const fmt=n=>String(+(+n).toFixed(2));
+const near=(a,b)=>Math.abs(a-b)<1e-3;
+const MUTED=t=>`<span class="muted">${t}</span>`;
+const aA=t=>`<span class="va">${t}</span>`, aB=t=>`<span class="vb">${t}</span>`;
+function parseNum(s){
+  if(s==null)return NaN;
+  s=String(s).toLowerCase().replace(/points?|dkk|kr\.?|thousand|rounds?/g,'').replace(/\s+/g,'').replace(',','.');
+  let pct=false; if(s.endsWith('%')){pct=true;s=s.slice(0,-1);}
+  let v=NaN,m;
+  if((m=s.match(/^(\d*\.?\d+)\/(\d*\.?\d+)$/)))v=+m[1]/+m[2];
+  else if(/^-?\d*\.?\d+$/.test(s))v=+s;
+  return pct?v/100:v;
+}
+const svgOpen=(W,H,label)=>`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c0392b"/></marker></defs>`;
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-size="11" ${o} paint-order="stroke" stroke="#fff" stroke-width="3">${t}</text>`;
+
+/* ================= games & matrix ================= */
+function analyze(g){
+  const R=g.rows.length,C=g.cols.length,brA=[],brB=[],ul=new Set(),ne=[];
+  for(let c=0;c<C;c++){const m=Math.max(...g.pay.map(row=>row[c][0]));brA[c]=[];
+    for(let r=0;r<R;r++)if(g.pay[r][c][0]===m){brA[c].push(r);ul.add(`${r},${c},0`);}}
+  for(let r=0;r<R;r++){const m=Math.max(...g.pay[r].map(x=>x[1]));brB[r]=[];
+    for(let c=0;c<C;c++)if(g.pay[r][c][1]===m){brB[r].push(c);ul.add(`${r},${c},1`);}}
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(ul.has(`${r},${c},0`)&&ul.has(`${r},${c},1`))ne.push(`${r},${c}`);
+  return {brA,brB,ul,ne};
+}
+const P=(g,r,c)=>`(${aA(g.rows[r])}, ${aB(g.cols[c])})`;
+const PK=(g,k)=>{const [r,c]=k.split(',').map(Number);return P(g,r,c);};
+function devs(g,r,c){
+  const an=g.an,out=[];
+  if(!an.brA[c].includes(r)){const b=an.brA[c][0];out.push(`${g.a} would switch to <b>${g.rows[b]}</b> (${g.pay[b][c][0]} &gt; ${g.pay[r][c][0]})`);}
+  if(!an.brB[r].includes(c)){const b=an.brB[r][0];out.push(`${g.b} would switch to <b>${g.cols[b]}</b> (${g.pay[r][b][1]} &gt; ${g.pay[r][c][1]})`);}
+  return out;
+}
+function matrix(g,o={}){
+  const R=g.rows.length,C=g.cols.length,show=o.show||(()=>true),ul=o.ul||new Set(),hl=o.hl||new Set();
+  let h=`<table class="mx"><tr><td></td><td></td><td colspan="${C}" class="plb">${g.pb}</td></tr>`;
+  h+=`<tr><td></td><td></td>${g.cols.map((n,c)=>`<th class="col ${o.grayCol===c?'g':''}">${n}</th>`).join('')}</tr>`;
+  for(let r=0;r<R;r++){
+    h+=`<tr>${r===0?`<td rowspan="${R}" class="pla"><span>${g.pa}</span></td>`:''}<th class="row ${o.grayRow===r?'g':''}">${g.rows[r]}</th>`;
+    for(let c=0;c<C;c++){
+      const gray=o.grayRow===r||o.grayCol===c;
+      const v=p=>{
+        if(!show(r,c,p))return '<span class="q">?</span>';
+        const k=`${r},${c},${p}`;let cls=p?'vb':'va';
+        if(ul.has(k))cls+=' u'; if(o.grayP===p)cls+=' dim'; if(o.click)cls+=' clk';
+        return `<span class="${cls}" data-k="${k}">${g.pay[r][c][p]}</span>`;
+      };
+      h+=`<td class="c ${gray?'gray':''} ${hl.has(`${r},${c}`)?'ne':''}">${v(0)}<span class="cm">,</span> ${v(1)}</td>`;
+    }
+    h+='</tr>';
+  }
+  return h+'</table>';
+}
+const READF=(a,b)=>`<p class="cap small">${a} chooses a <b>row</b>; ${b} chooses a <b>column</b>. First number = ${aA(a)}'s payoff, second = ${aB(b)}'s. Higher = better.</p>`;
+const NOTACT=(prof,who,acts)=>`<b>Not an action!</b> ${prof} is a <b>strategy profile</b>: one strategy for each player. A best response is one of ${who}'s own actions: ${acts}.`;
+const DEF_SP='<div class="defn pop"><b class="t">Strategy profile</b>: one strategy for <i>each</i> player, written (row player\'s action, column player\'s action). An <b>action</b> is what <i>one</i> player does.</div>';
+function neHint(g){
+  return sel=>{
+    if(sel.includes('none'))return 'There <i>is</i> at least one cell where both payoffs are underlined.';
+    const ans=g.an.ne,wrong=sel.filter(k=>!ans.includes(k)),miss=ans.filter(k=>!sel.includes(k));
+    let h='';
+    if(wrong.length)h+='<ul>'+wrong.map(k=>{const [r,c]=k.split(',').map(Number);return `<li>${P(g,r,c)} is not an equilibrium: ${J(devs(g,r,c))}.</li>`;}).join('')+'</ul>';
+    if(miss.length)h+=`<p>${wrong.length?'Also, you':'Everything you picked is right, but you'} are missing ${miss.length>1?'some equilibria':'one equilibrium'}.</p>`;
+    return h;
+  };
+}
+
+/* ================= Exercise 1: public goods game ================= */
+const N1=5, M1=3, E1=10;               // 5 students, pot tripled, 10 points each
+const keepPts=k=>E1+M1*E1*k/N1;        // you keep, k others contribute
+const contPts=k=>M1*E1*(k+1)/N1;       // you contribute, k others contribute
+function vis1(stg){
+  const ks=[0,1,2,3,4];
+  const cell=(on,v,k)=>`<td class="${stg<2&&k===2?'hc':''}">${on?v:'<span class="q">?</span>'}</td>`;
+  let h=`<table class="ptab"><tr><th>how many <i>others</i> contribute →</th>${ks.map(k=>`<th class="${stg<2&&k===2?'hc':''}">${k}</th>`).join('')}</tr>
+    <tr><td style="color:#6b3fa0">You keep</td>${ks.map(k=>cell(stg>=1,keepPts(k),k)).join('')}</tr>
+    <tr><td style="color:#777">You contribute</td>${ks.map(k=>cell(stg>=2,contPts(k),k)).join('')}</tr>
+    ${stg>=3?`<tr class="diff"><td>Keep − contribute</td>${ks.map(k=>`<td>+${keepPts(k)-contPts(k)}</td>`).join('')}</tr>`:''}</table>`;
+  const W=440,H=290,m={l:46,r:20,t:14,b:44},X=4,Y=36;
+  const sx=k=>m.l+k/X*(W-m.l-m.r), sy=y=>H-m.b-y/Y*(H-m.t-m.b);
+  let s=svgOpen(W,H,'Your points by how many others contribute');
+  for(let k=0;k<=4;k++)s+=`<line x1="${sx(k)}" y1="${sy(0)}" x2="${sx(k)}" y2="${sy(Y)}" stroke="#eee"/><text x="${sx(k)}" y="${sy(0)+17}" font-size="11" text-anchor="middle" fill="#555">${k}</text>`;
+  for(let y=0;y<=35;y+=5)s+=`<line x1="${sx(0)}" y1="${sy(y)}" x2="${sx(X)}" y2="${sy(y)}" stroke="#eee"/><text x="${sx(0)-8}" y="${sy(y)+4}" font-size="11" text-anchor="end" fill="#555">${y}</text>`;
+  s+=`<text x="${sx(2)}" y="${H-8}" font-size="12" text-anchor="middle">how many <tspan font-weight="700">others</tspan> contribute</text>`;
+  s+=`<text x="13" y="${sy(Y/2)}" font-size="12" text-anchor="middle" transform="rotate(-90 13 ${sy(Y/2)})">your points</text>`;
+  const line=(f,col,sq)=>`<polyline points="${ks.map(k=>sx(k)+','+sy(f(k))).join(' ')}" fill="none" stroke="${col}" stroke-width="3"/>`+ks.map(k=>sq?`<rect x="${sx(k)-4.5}" y="${sy(f(k))-4.5}" width="9" height="9" fill="${col}"/>`:`<circle cx="${sx(k)}" cy="${sy(f(k))}" r="5" fill="${col}"/>`).join('');
+  const ang=-Math.atan2(sy(0)-sy(6),sx(1)-sx(0))*180/Math.PI;
+  const rot=(x,y,t,col,dy)=>{const px=sx(x),py=sy(y)+dy;return `<text x="${px}" y="${py}" font-size="11" fill="${col}" text-anchor="middle" transform="rotate(${ang.toFixed(1)} ${px} ${py})">${t}</text>`;};
+  if(stg>=1){s+=line(keepPts,'#6b3fa0');s+=rot(1.5,keepPts(1.5),'you keep','#6b3fa0',-9);}
+  if(stg>=2){s+=line(contPts,'#999',1);s+=rot(1.5,contPts(1.5),'you contribute','#777',17);}
+  if(stg>=3){s+=`<line x1="${sx(2.5)}" y1="${sy(contPts(2.5))-6}" x2="${sx(2.5)}" y2="${sy(keepPts(2.5))+6}" stroke="#c0392b" stroke-width="2" marker-end="url(#arr)" marker-start="url(#arr)"/>`+rot(3.25,(keepPts(3.25)+contPts(3.25))/2,'always 4 more','#a33025',4);}
+  if(stg>=4){s+=`<circle cx="${sx(0)}" cy="${sy(10)}" r="9" fill="none" stroke="#d9822b" stroke-width="3"/><line x1="${sx(0)+5}" y1="${sy(10)-9}" x2="${sx(.25)}" y2="${sy(29)}" stroke="#d9822b" stroke-width="1.5"/>`+T(sx(.15),sy(31),'everyone keeps: 10 each','fill="#b8651a" font-weight="600"');}
+  if(stg>=5){s+=`<circle cx="${sx(4)}" cy="${sy(30)}" r="9" fill="none" stroke="#d9822b" stroke-width="3"/><line x1="${sx(4)-3}" y1="${sy(30)+9}" x2="${sx(3.8)}" y2="${sy(11)}" stroke="#d9822b" stroke-width="1.5"/>`+T(sx(4),sy(8),'everyone contributes: 30 each','text-anchor="end" fill="#b8651a" font-weight="600"');}
+  s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(X)+8}" y2="${sy(0)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(0)}" y2="${sy(Y)-6}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  return h+(stg>=1?s+'</svg>':'<p class="cap small">Answer the questions to fill in the table and draw the chart.</p>');
+}
+
+/* ================= Exercise 2: union puzzle ================= */
+const WAGE=20, FEE=5;
+function vis2(stg,S){
+  const X=stg>=3?S.steps[3].val:0;
+  const W=440,H=300,m={l:46,r:20,t:16,b:40},Y=30;
+  const sy=y=>H-m.b-y/Y*(H-m.t-m.b);
+  let s=svgOpen(W,H,'What Maja gets: join or not');
+  for(let y=0;y<=Y;y+=5)s+=`<line x1="${m.l}" y1="${sy(y)}" x2="${W-m.r}" y2="${sy(y)}" stroke="#eee"/><text x="${m.l-8}" y="${sy(y)+4}" font-size="11" text-anchor="end" fill="#555">${y}</text>`;
+  s+=`<text x="13" y="${sy(Y/2)}" font-size="12" text-anchor="middle" transform="rotate(-90 13 ${sy(Y/2)})">thousand DKK per year</text>`;
+  const bw=90, x1=110, x2=290;
+  s+=`<text x="${x1+bw/2}" y="${H-16}" font-size="13" font-weight="600" text-anchor="middle">Don't join</text><text x="${x2+bw/2}" y="${H-16}" font-size="13" font-weight="600" text-anchor="middle">Join</text>`;
+  if(stg>=1){
+    s+=`<rect x="${x1}" y="${sy(WAGE)}" width="${bw}" height="${sy(0)-sy(WAGE)}" fill="#b9b9b9"/>`+T(x1+bw/2,sy(WAGE/2),'wage gain 20','text-anchor="middle"');
+    s+=T(x1+bw/2,sy(WAGE)-8,'<tspan font-weight="700">20</tspan>','text-anchor="middle" font-size="13"');
+  } else s+=T(x1+bw/2,sy(3),'?','text-anchor="middle" font-size="16" fill="#bbb"');
+  if(stg>=2){
+    s+=`<rect x="${x2}" y="${sy(WAGE-FEE)}" width="${bw}" height="${sy(0)-sy(WAGE-FEE)}" fill="#b9b9b9"/>`+T(x2+bw/2,sy((WAGE-FEE)/2),'wage gain 20','text-anchor="middle"');
+    s+=`<rect x="${x2}" y="${sy(WAGE)}" width="${bw}" height="${sy(WAGE-FEE)-sy(WAGE)}" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+    s+=T(x2+bw+6,sy(WAGE-FEE/2)+4,'fee −5','fill="#a33025"');
+    if(X>0){s+=`<rect x="${x2}" y="${sy(WAGE-FEE+X)}" width="${bw}" height="${sy(WAGE-FEE)-sy(WAGE-FEE+X)}" fill="#6b3fa0" fill-opacity=".75"/>`;
+      s+=T(x2-6,sy(WAGE-FEE+X/2)+4,`insurance +${X}`,'text-anchor="end" fill="#6b3fa0" font-weight="600"');}
+    s+=T(x2+bw/2,sy(WAGE-FEE+X)-8,`<tspan font-weight="700">${WAGE-FEE+X}</tspan>`,'text-anchor="middle" font-size="13"');
+    s+=`<line x1="${m.l}" y1="${sy(WAGE)}" x2="${W-m.r}" y2="${sy(WAGE)}" stroke="#555" stroke-dasharray="6 4"/>`;
+  } else s+=T(x2+bw/2,sy(3),'?','text-anchor="middle" font-size="16" fill="#bbb"');
+  s+=`<line x1="${m.l}" y1="${sy(0)}" x2="${W-m.r}" y2="${sy(0)}" stroke="#333" stroke-width="1.5"/></svg>`;
+  if(stg>=5){
+    const D=[['US',10,0],['France',9,0],['Germany',16,0],['UK',23,0],['Norway',50,0],['Belgium',49,1],['Finland',59,1],['Sweden',65,1],['Denmark',67,1]];
+    const W2=440,rh=22,H2=D.length*rh+40,l=80,r=30,sx=v=>l+v/80*(W2-l-r);
+    s+=`<div class="subhead">Union members, % of employees</div>`+svgOpen(W2,H2,'Union membership by country');
+    for(let v=0;v<=80;v+=20)s+=`<line x1="${sx(v)}" y1="4" x2="${sx(v)}" y2="${D.length*rh+6}" stroke="#eee"/><text x="${sx(v)}" y="${D.length*rh+20}" font-size="10" text-anchor="middle" fill="#666">${v}</text>`;
+    D.forEach(([n,v,g],i)=>{const y=8+i*rh;
+      s+=`<text x="${l-8}" y="${y+12}" font-size="11" text-anchor="end" ${n==='Denmark'?'font-weight="700" fill="#c60c30"':''}>${n}</text><rect x="${l}" y="${y}" width="${sx(v)-l}" height="15" fill="${g?'#6b3fa0':'#bdbdbd'}" fill-opacity="${g?.85:1}"/><text x="${sx(v)+4}" y="${y+12}" font-size="10" fill="#444">${v}</text>`;});
+    s+=`<text x="${W2-r}" y="${H2-4}" font-size="9" text-anchor="end" fill="#888">approximate, OECD (around 2019–22)</text></svg>`;
+  }
+  return s;
+}
+
+/* ================= Exercise 3: protest game ================= */
+const PROT={a:'Citizen A',b:'Citizen B',pa:'Citizen A',pb:'Citizen B',rows:['Join','Stay home'],cols:['Join','Stay home'],pay:[[[3,3],[0,1]],[[1,0],[2,2]]]};
+PROT.an=analyze(PROT);
+
+/* ================= Exercise 4: Denmark climate ================= */
+function DK(b){const g={a:'Denmark',b:'The rest of the world',pa:'Denmark',pb:'Rest of the world',rows:['Cut','Pollute'],cols:['Cut','Pollute'],
+  pay:[[[4+b,1],[1+b,2]],[[5,1],[2,2]]]};g.an=analyze(g);return g;}
+const DK0=DK(0), DK2=DK(2);
+
+/* ================= Exercise 5: repeated game ================= */
+const coopTot=t=>3*t, cheatTot=t=>4+2*(t-1);
+function vis5(stg,S){
+  const Tn=stg>=2?S.steps[2].val:3;
+  let h=`<table class="ptab"><tr><th>points per round</th><th>Round 1</th><th>Round 2</th><th>Round 3</th><th>Total</th></tr>
+   <tr><td style="color:#6b3fa0">Keep cooperating</td>${stg>=1?'<td>3</td><td>3</td><td>3</td><td><b>9</b></td>':'<td class="q">?</td>'.repeat(4)}</tr>
+   <tr><td style="color:#777">Cheat in round 1</td>${stg>=2?'<td>4</td><td>2</td><td>2</td><td><b>8</b></td>':'<td class="q">?</td>'.repeat(4)}</tr></table>`;
+  if(stg<2)return h;
+  const W=440,H=290,m={l:46,r:20,t:14,b:44},X=10,Y=32;
+  const sx=t=>m.l+(t-1)/(X-1)*(W-m.l-m.r), sy=y=>H-m.b-y/Y*(H-m.t-m.b), ts=[1,2,3,4,5,6,7,8,9,10];
+  let s=svgOpen(W,H,'Total points over rounds');
+  ts.forEach(t=>s+=`<line x1="${sx(t)}" y1="${sy(0)}" x2="${sx(t)}" y2="${sy(Y)}" stroke="#eee"/><text x="${sx(t)}" y="${sy(0)+17}" font-size="11" text-anchor="middle" fill="#555">${t}</text>`);
+  for(let y=0;y<=30;y+=5)s+=`<line x1="${sx(1)}" y1="${sy(y)}" x2="${sx(X)}" y2="${sy(y)}" stroke="#eee"/><text x="${sx(1)-8}" y="${sy(y)+4}" font-size="11" text-anchor="end" fill="#555">${y}</text>`;
+  s+=`<text x="${sx(5.5)}" y="${H-8}" font-size="12" text-anchor="middle">number of rounds the countries trade</text><text x="13" y="${sy(Y/2)}" font-size="12" text-anchor="middle" transform="rotate(-90 13 ${sy(Y/2)})">total points</text>`;
+  s+=`<rect x="${m.l-8}" y="${sy(Y)}" width="${sx(2)-m.l+16}" height="${sy(0)-sy(Y)}" fill="#c0392b" fill-opacity=".08"/>`+T(sx(1.5),sy(Y)+14,'cheating','text-anchor="middle" fill="#a33025"')+T(sx(1.5),sy(Y)+27,'pays (or ties)','text-anchor="middle" fill="#a33025"');
+  const pl=(f,col,sq)=>`<polyline points="${ts.map(t=>sx(t)+','+sy(f(t))).join(' ')}" fill="none" stroke="${col}" stroke-width="3"/>`+ts.map(t=>sq?`<rect x="${sx(t)-4}" y="${sy(f(t))-4}" width="8" height="8" fill="${col}"/>`:`<circle cx="${sx(t)}" cy="${sy(f(t))}" r="4.5" fill="${col}"/>`).join('');
+  s+=pl(coopTot,'#6b3fa0')+pl(cheatTot,'#999',1);
+  s+=T(sx(10)-4,sy(30)-10,'keep cooperating','text-anchor="end" fill="#6b3fa0"')+T(sx(10)-4,sy(cheatTot(10))+26,'cheat in round 1','text-anchor="end" fill="#777"');
+  s+=`<line x1="${sx(Tn)}" y1="${sy(0)}" x2="${sx(Tn)}" y2="${sy(Y)}" stroke="#d9822b" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s+=`<circle cx="${sx(Tn)}" cy="${sy(coopTot(Tn))}" r="8" fill="none" stroke="#d9822b" stroke-width="2.5"/><circle cx="${sx(Tn)}" cy="${sy(cheatTot(Tn))}" r="8" fill="none" stroke="#d9822b" stroke-width="2.5"/>`;
+  s+=`<line x1="${sx(1)}" y1="${sy(0)}" x2="${sx(X)+8}" y2="${sy(0)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx(1)}" y1="${sy(0)}" x2="${sx(1)}" y2="${sy(Y)-6}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  return h+s+'</svg>';
+}
+
+/* ================= exercise definitions ================= */
+const pf=(g,r,c)=>({id:`${r},${c}`,label:P(g,r,c)});
+const all4=g=>[pf(g,0,0),pf(g,0,1),pf(g,1,0),pf(g,1,1)];
+
+const EX=[
+/* ---------- 1. public goods game ---------- */
+{lvl:1,sitTitle:'The situation',visTitle:'Your points',
+ defs:[['Public good','Non-excludable (you cannot keep non-payers out) and non-rival (my use does not leave less for you).',''],
+   ['Free riding','Enjoying a benefit without paying your share of it.','u'],
+   ['Dominant strategy','A strategy that is your best choice no matter what the others do.','e']],
+ sit:`<p>A group of <b>${N1} students</b> each has <b>${E1} points</b>. Each secretly chooses:</p>
+  <ul><li><b>Keep</b>: your 10 points stay with you.</li><li><b>Contribute</b>: your 10 points go into a group pot.</li></ul>
+  <p>The pot is <b>tripled</b> and split <b>equally</b> among all ${N1} students, whether they contributed or not.</p>
+  <p class="small">Example: if 1 student contributes, the pot is 10 × 3 = 30, and each of the 5 gets 30 ÷ 5 = 6.</p>`,
+ steps:[
+  {type:'num',unit:'points',text:'<b>2 other</b> students contribute. You <b>keep</b>. How many points do you end up with?',ansText:'22 points',
+   check:v=>near(v,22)?{ok:1}:near(v,12)?{hint:'12 is your share of the pot. Don\'t forget the 10 points you kept!'}
+     :near(v,60)||near(v,70)?{hint:'The pot is split among <b>all 5</b> students.'}:near(v,20)?{hint:'The pot is 2 × 10 = 20 before it is tripled.'}
+     :{hint:'Pot = 2 × 10 × 3 = 60. Your share = 60 ÷ 5. Then add the 10 you kept.'},
+   short:'Pot = 2 × 10 × 3 = 60; your share 60 ÷ 5 = 12; plus your own 10 = <b>22</b>.',
+   long:'<p>The whole "You keep" row follows the same rule: 10 + 6 for every other student who contributes (10, 16, 22, 28, 34).</p>'},
+  {type:'num',unit:'points',text:'Now you <b>contribute</b>, and <b>2 others</b> contribute too. How many points do you end up with?',ansText:'18 points',
+   check:v=>near(v,18)?{ok:1}:near(v,28)?{hint:'You gave your 10 points away, so you do not keep them.'}:near(v,90)?{hint:'The pot is split among all 5 students.'}
+     :near(v,12)?{hint:'Now <b>3</b> people contribute (you + 2 others).'}:{hint:'Now 3 people contribute: pot = 3 × 10 × 3. Split it among 5. You kept nothing.'},
+   short:'Pot = 3 × 10 × 3 = 90; your share 90 ÷ 5 = <b>18</b>. You kept nothing.',
+   long:'<p>The "You contribute" row: 6, 12, 18, 24, 30. Compare with the row above: 22 vs 18.</p>'},
+  {type:'num',unit:'points',text:'Whatever the others do, how many points does <b>contributing cost you</b>, compared with keeping?',ansText:'4 points',
+   check:v=>near(v,4)?{ok:1}:near(v,10)?{hint:'You give 10, but some of it comes back to you through the pot.'}
+     :near(v,6)?{hint:'6 is what comes back to you. The cost is what you give minus what comes back.'}:{hint:'Your 10 points become 30 in the pot, split among 5. How much of it comes back to you?'},
+   short:'Your 10 points become 30, but you get only 30 ÷ 5 = 6 back: contributing always costs you 10 − 6 = <b>4</b>.',
+   long:'<p>The gap between the two lines is the same everywhere: <b>Keep</b> is a <b>dominant strategy</b>. It is best for you whatever the others do. That is free riding.</p>'},
+  {type:'radio',text:'What is the <b>Nash equilibrium</b>?',
+   opts:[{id:'k',label:'Everyone keeps (10 points each)'},{id:'c',label:'Everyone contributes (30 points each)'},{id:'h',label:'Some contribute, some keep'},{id:'n',label:'There is no Nash equilibrium'}],ans:'k',
+   hint:id=>({c:'If all 4 others contribute, would you? Keeping gives you 34, contributing 30. You would switch.',
+     h:'Anyone who contributes would do better by switching to keep (+4 points).',n:'Look for an outcome where nobody wants to change on their own.'})[id],
+   short:'<b>Everyone keeps</b>: each gets 10 (orange circle).',
+   long:'<p>Keep is dominant, so every student keeps. If you switched alone, you would get 6 instead of 10: nobody wants to change on their own.</p>'},
+  {type:'radio',text:'Compare "everyone keeps" with "everyone contributes".',
+   opts:[{id:'e',label:'"Everyone keeps" is Pareto efficient'},{id:'n',label:'"Everyone keeps" is <b>not</b> Pareto efficient: if everyone contributes, everyone is better off'},{id:'s',label:'Both outcomes are equally good'}],ans:'n',
+   hint:id=>id==='e'?'Is there an outcome where <i>every</i> student gets more than 10?':'Compare the two orange circles: 10 each vs 30 each.',
+   short:'Everyone contributing gives 30 each instead of 10 each: the equilibrium is <b>not</b> Pareto efficient.',
+   long:'<p>This is a <b>collective action problem</b>: the group is stuck in a Nash equilibrium that is not Pareto efficient. It is a prisoner\'s dilemma with 5 players instead of 2, a <b>free-rider problem</b>.</p><p>Test from class: if you were <i>sure</i> all others give, would you? No (34 &gt; 30). That is what makes it a free-rider problem rather than a coordination problem.</p>'}
+ ],
+ vis:stg=>vis1(stg),
+ legend:stg=>stg>=4?'<span class="lg"><i style="border:3px solid #d9822b;background:none"></i>whole-group outcomes</span>':''},
+
+/* ---------- 2. union puzzle ---------- */
+{lvl:2,sitTitle:'The situation',visTitle:'What Maja gets',
+ defs:[['Selective incentive','A private benefit (or cost) given <b>only</b> to those who contribute (or don\'t).',''],
+   ['Free riding','Enjoying a benefit without paying your share of it.','u'],
+   ['Ghent system','Unemployment insurance is run by funds linked to unions (in Denmark: <i>a-kasser</i>). It pays you money if you lose your job.','e']],
+ sit:`<p><b>Maja</b> works in a Danish factory. She cares only about money and considers joining the union.</p>
+  <ul class="facts"><li><span>Union will win a wage rise for <b>all</b> workers, members or not</span><b>20</b></li><li><span>Union fee (members only)</span><b>5</b></li></ul>
+  <p class="small">All numbers in thousand DKK per year. The union has thousands of members, so Maja's membership won't affect the outcome.</p>`,
+ steps:[
+  {type:'num',unit:'thousand DKK',text:'What does Maja get if she does <b>not</b> join?',ansText:'20',
+   check:v=>near(v,20)?{ok:1}:near(v,0)?{hint:'The wage rise covers <b>all</b> workers, members or not.'}:near(v,15)?{hint:'She pays the fee only if she joins.'}:{hint:'Look at the list on the left: who gets the wage rise?'},
+   short:'<b>20</b>: she gets the wage rise anyway and pays no fee.',long:'<p>For the workers, the wage rise is a <b>public good</b>: non-members cannot be kept out.</p>'},
+  {type:'num',unit:'thousand DKK',text:'What does Maja get if she <b>joins</b>?',ansText:'15',
+   check:v=>near(v,15)?{ok:1}:near(v,25)?{hint:'The fee is a cost: subtract it.'}:near(v,20)?{hint:'Members pay a fee.'}:{hint:'Wage rise minus the union fee.'},
+   short:'20 − 5 = <b>15</b>.',long:'<p>Joining does not change the wage rise (the union wins it anyway), it only adds the fee.</p>'},
+  {type:'radio',text:'So does a money-minded Maja join?',opts:[{id:'y',label:'Yes'},{id:'n',label:'No'}],ans:'n',
+   hint:()=>'Compare 15 and 20.',
+   short:'<b>No</b>: 20 &gt; 15. She free rides on the members.',
+   long:'<p>This is Olson\'s logic: in a big group, each member\'s fee hardly changes the outcome, so everyone is tempted to free ride. Yet about <b>two thirds</b> of Danish employees are union members (US: about 1 in 10). Why?</p>'},
+  {type:'slider',min:0,max:12,init:0,slText:v=>`Insurance worth <b>${v}</b> thousand DKK`,ansText:'5 thousand DKK',
+   text:'The union also offers <b>unemployment insurance</b>, but <b>only to members</b>. What is the <b>minimum</b> value of the insurance that makes joining at least as good as not joining? ',
+   check:x=>x===5?{ok:1}:x<5?{hint:`With insurance worth ${x}, joining gives 15 + ${x} = ${15+x}: still less than 20.`}:{hint:'Joining now pays, but a smaller value would also work. We want the <b>minimum</b>.'},
+   onExplain:s=>{s.val=5;},
+   short:'15 + insurance ≥ 20 → insurance ≥ <b>5</b>, the size of the fee.',
+   long:'<p>At exactly 5 Maja is indifferent; we assume she then joins. Anything above 5 makes joining strictly better. The private benefit only has to cover the fee: the wage rise is the same either way.</p>'},
+  {type:'radio',text:'Which tool from the toolkit is this?',opts:[{id:'co',label:'Coercion'},{id:'si',label:'Selective incentive'},{id:'ri',label:'Repeated interaction'},{id:'ex',label:'Changing expectations'}],ans:'si',
+   hint:id=>({co:'Nobody forces Maja to join. She chooses to, because of a private benefit.',
+     ri:'Nothing here depends on meeting again in the future.',
+     ex:'This is a free-rider problem, not a coordination problem: even if Maja were sure everyone else joins, without insurance she would still free ride.'})[id],
+   short:'A <b>selective incentive</b>: a private benefit given only to members.',
+   long:'<p>It turns a public-good problem into a private choice: "join to get the insurance". Denmark\'s <b>Ghent system</b> links unemployment insurance funds (a-kasser) to unions, and the Ghent countries (purple bars) have much higher union membership than most of Europe.</p><p class="small">Norway, without a Ghent system, is high too: norms, history and bargaining institutions also matter. And since the 2000s many Danes join cheaper a-kasser that are not linked to a union.</p>'}
+ ],
+ vis:(stg,S)=>vis2(stg,S),
+ cap:(stg,S)=>{if(stg<3)return '';const x=S.steps[3].val,j=15+x,ok=j>=20;
+   return `<p class="cap box">Join: 15 + ${x} = <b>${j}</b> vs. don't join: <b>20</b> → Maja <b style="color:${ok?'var(--green)':'var(--red)'}">${ok?(j===20?'is indifferent (we assume she joins)':'joins'):'free rides'}</b>.</p>`+(stg>=5?'<p class="cap small">Purple bars = Ghent countries.</p>':'');}},
+
+/* ---------- 3. protest game ---------- */
+{lvl:3,sitTitle:'The situation',visTitle:'Payoff matrix',
+ defs:[['Coordination problem','Each would act <i>if sure</i> the others act too, so everyone waits, and nobody acts.',''],
+   ['Nash equilibrium','A strategy profile where everyone plays a best response: no one wants to change their choice on their own.','u'],
+   ['Pareto efficient','No other outcome makes someone better off without making anyone worse off.','e']],
+ sit:`<p>Two citizens decide whether to join a protest against a dictator, at the same time.</p>
+  <ul><li>If <b>both</b> join, the dictator is defeated (best for both).</li><li>If only <b>one</b> joins, she is arrested (worst for her).</li><li>If <b>nobody</b> joins, the dictator stays.</li></ul>
+  <p><b>Recipe:</b> for each action of the other citizen, underline the best response. Cells with <b>both</b> payoffs underlined are Nash equilibria.</p>`,
+ steps:[
+  {type:'check',text:'Find <b>all</b> Nash equilibria. '+MUTED('(Select all that apply.)'),opts:[...all4(PROT),{id:'none',label:'No Nash equilibrium'}],ans:PROT.an.ne,
+   hint:neHint(PROT),
+   short:`${J(PROT.an.ne.map(k=>PK(PROT,k)))}: two equilibria.`,
+   long:`<ul><li>If B joins, A's best response is Join (3 &gt; 1). If B stays home, A's best is Stay home (2 &gt; 0).</li><li>The same for B.</li></ul><p>Each citizen wants to do <b>what the other does</b>. That is why there are two equilibria.</p>`},
+  {type:'radio',text:'Which equilibrium is <b>not</b> Pareto efficient?',opts:[pf(PROT,0,0),pf(PROT,1,1),{id:'both',label:'Both of them'},{id:'none',label:'Neither'}],ans:'1,1',
+   hint:id=>id==='0,0'||id==='both'?'(Join, Join) gives both citizens 3, their best payoff. Can anyone be made better off?':'Compare (2, 2) with (3, 3).',
+   short:`${P(PROT,1,1)}: both would be better off at (Join, Join), 3 &gt; 2.`,
+   long:'<p>The group can get stuck in the bad equilibrium: I stay home because I fear <i>you</i> will stay home.</p>'},
+  {type:'radio',text:'Is this a <b>free-rider</b> problem or a <b>coordination</b> problem?',opts:[{id:'fr',label:'Free-rider problem'},{id:'co',label:'Coordination problem'}],ans:'co',
+   hint:()=>'Use the test from class: if you were <i>sure</i> the other citizen joins, would you join?',
+   short:'<b>Coordination</b>: if I am sure you join, I want to join too (3 &gt; 1).',
+   long:'<p>In a free-rider problem you would <i>not</i> contribute even if sure that others do (in Exercise 1: 34 &gt; 30). Here you <i>would</i>. Nobody wants to cheat; the problem is <b>expectations</b>.</p>'},
+  {type:'match',text:'Sort each case: free-rider or coordination problem?',cats:['Free-rider','Coordination'],
+   items:[{label:'Cutting CO₂ emissions',ans:'Free-rider',why:'even if all others cut, each country does better by keeping cheap fossil fuels.'},
+     {label:'Which side of the road to drive on',ans:'Coordination',why:'nobody wants to cheat: you just want to drive on the same side as everyone else.'},
+     {label:'Cod fishing off Newfoundland',ans:'Free-rider',why:'a common-pool resource: each fleet takes too much, even if others hold back.'},
+     {label:'Which phone charger standard firms use',ans:'Coordination',why:'each firm wants the same standard as the others.'},
+     {label:'Paying union fees (no insurance)',ans:'Free-rider',why:'the wage rise comes anyway, so each worker saves the fee.'},
+     {label:'Leipzig protests, 1989',ans:'Coordination',why:'each joins if sure enough others join; as crowds grew, more joined.'}],
+   short:'Free-rider: climate, cod, union fees. Coordination: driving side, chargers, Leipzig.',
+   long:''},
+  {type:'radio',text:'According to the toolkit, what is the main fix for a <b>coordination</b> problem?',
+   opts:[{id:'pay',label:'Change payoffs: fines or rewards'},{id:'exp',label:'Change expectations: communication, focal points, leaders, public signals'},{id:'no',label:'Nothing: the bad equilibrium is permanent'}],ans:'exp',
+   hint:id=>id==='pay'?'Payoffs are already fine: everyone prefers (Join, Join). What is missing?':'Recall Leipzig and Sweden\'s Dagen H: the bad equilibrium can change quickly.',
+   short:'<b>Change expectations</b>: once everyone expects the good outcome, it enforces itself.',
+   long:'<p>Leipzig, 1989: the Monday demonstrations started after the weekly peace prayers at the Nikolaikirche, a <b>focal point</b> (a time and place everyone knew). Each week\'s larger crowd was a <b>public signal</b> that it was safer to join. A few thousand in September became more than 300,000 by 23 October.</p>'}
+ ],
+ vis:(stg,S)=>matrix(PROT,{ul:stg>=1?PROT.an.ul:S.scratch,hl:stg>=1?new Set(PROT.an.ne):new Set(),click:stg<1}),
+ cap:(stg)=>READF('Citizen A','Citizen B')+(stg>=1?'<p class="cap">Purple cells = Nash equilibria.'+(stg>=2?' (Stay home, Stay home) is the bad one.':'')+'</p>'
+   :'<p class="cap box">Click a payoff to underline it. <button class="s sm" data-act="clear">Clear my underlines</button></p>')},
+
+/* ---------- 4. Denmark ---------- */
+{lvl:3,sitTitle:'The case',visTitle:'Payoff matrix',
+ defs:[['Externality','An effect of my action on others that I do not pay for (or get paid for).',''],
+   ['Dominant strategy','A strategy that is your best choice no matter what the others do.','u'],
+   ['Three tools','<b>Coercion</b>: the law forces or forbids. <b>Incentives</b>: change payoffs (taxes, fees, rewards). <b>Repeated interaction</b>: cooperate now to keep cooperation later.','e']],
+ sit:`<p>In 2019 Denmark passed a Climate Act: cut emissions by <b>70%</b> by 2030 (compared with 1990). But Denmark emits only about <b>0.1%</b> of the world's CO₂ (China about 30%, the US about 13%).</p>
+  <p>Simplified game: ${aA('Denmark')} and the ${aB('rest of the world')} each choose to <b>Cut</b> emissions or <b>Pollute</b>. A stable climate is a public good: everyone gains when others cut, but cutting yourself is costly.</p>`,
+ steps:[
+  {type:'radio',text:`Suppose the rest of the world <b>cuts</b>. What is Denmark's <b>best response</b>?`,opts:[{id:'C',label:aA('Cut')},{id:'P',label:aA('Pollute')},{id:'p',label:P(DK0,1,0)}],ans:'P',
+   hint:id=>id==='p'?NOTACT(P(DK0,1,0),'Denmark','Cut or Pollute'):'Look only at the Cut column, and compare Denmark\'s payoffs.',extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Pollute</b>: 5 &gt; 4. Denmark enjoys the stable climate without paying.',long:'<p>That is free riding on the rest of the world.</p>'},
+  {type:'radio',text:`Suppose the rest of the world <b>pollutes</b>. What is Denmark's <b>best response</b>?`,opts:[{id:'C',label:aA('Cut')},{id:'P',label:aA('Pollute')},{id:'p',label:P(DK0,1,1)}],ans:'P',
+   hint:id=>id==='p'?NOTACT(P(DK0,1,1),'Denmark','Cut or Pollute'):'Look only at the Pollute column, and compare Denmark\'s payoffs.',extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Pollute</b>: 2 &gt; 1. Denmark\'s 0.1% cannot save the climate alone.',
+   long:'<p>Pollute is Denmark\'s <b>dominant strategy</b>. So theory says Denmark should free ride. Why doesn\'t it?</p>'},
+  {type:'slider',min:0,max:4,init:0,slText:v=>`Green bonus: <b>+${v}</b> for Cut`,ansText:'2',
+   text:'Danish green industry (wind turbines, jobs, exports) earns a <b>bonus</b> whenever Denmark cuts. What is the <b>smallest whole-number bonus</b> that makes Cut <b>strictly better</b> for Denmark, whatever the world does? ',
+   check:b=>b===2?{ok:1}:b===1?{hint:'With +1, Denmark is exactly <b>indifferent</b> (5 = 5 and 2 = 2: both payoffs are underlined). We need Cut to be strictly better.'}
+     :b<1?{hint:'Pollute is still better whatever the world does.'}:{hint:'That works, but a smaller bonus would also work.'},
+   onExplain:s=>{s.val=2;},
+   short:'With +2: Cut gives 6 &gt; 5 and 3 &gt; 2. Cut is now <b>dominant</b>.',
+   long:'<p>Anything above 1 makes Cut strictly better. Lesson: Denmark\'s choice is <b>rational</b>, given its incentives. Rational choice did not fail; we just had the payoffs wrong.</p>'},
+  {type:'radio',text:'With the bonus of 2, and the rest of the world\'s payoffs now shown, what is the <b>Nash equilibrium</b>?',opts:all4(DK2),ans:'0,1',
+   hint:id=>{const [r,c]=id.split(',').map(Number);return `Not an equilibrium: ${J(devs(DK2,r,c))}.`;},
+   short:`${P(DK2,0,1)}: Denmark cuts, the rest of the world keeps polluting.`,
+   long:'<p>The rest of the world still has a dominant strategy: Pollute (2 &gt; 1). Denmark\'s bonus does not change <i>their</i> incentives. So the climate is <b>not</b> saved: the big emitters\' payoffs must change too.</p>'},
+  {type:'match',text:'Which tool is each real policy?',cats:['Coercion','Incentives','Repeated interaction'],
+   items:[{label:'Denmark bans new North Sea oil and gas licences',ans:'Coercion',why:'the law forbids an action.'},
+     {label:'Denmark taxes farm emissions from 2030',ans:'Incentives',why:'a tax changes the payoff of polluting.'},
+     {label:'The EU charges a carbon fee on imported steel and cement',ans:'Incentives',why:'a fee makes polluting exporters pay.'},
+     {label:'Paris Agreement: new pledges and reviews every 5 years',ans:'Repeated interaction',why:'countries meet again and again and can see who keeps their promises.'}],
+   short:'Ban = coercion; farm tax and EU carbon fee = incentives; Paris reviews = repeated interaction.',
+   long:'<p>Between countries there is no world government, so <b>coercion only works inside a state</b> (recall Realism: anarchy).</p>'}
+ ],
+ vis:(stg,S)=>{
+   const b=stg>=2?S.steps[2].val:0,g=DK(b);
+   const show=(r,c,p)=>p===0||stg>=3, o={show};
+   if(stg===0){o.grayCol=1;o.grayP=1;o.ul=new Set();}
+   else if(stg===1){o.grayCol=0;o.grayP=1;o.ul=new Set(['1,0,0']);}
+   else if(stg===2){o.ul=new Set([...g.an.ul].filter(k=>k.endsWith(',0')));}
+   else {o.ul=g.an.ul; if(stg>=4)o.hl=new Set(g.an.ne);}
+   return matrix(g,o);
+ },
+ cap:(stg,S)=>{
+   const b=stg>=2?S.steps[2].val:0;
+   let c=READF('Denmark','the rest of the world');
+   if(stg===0)c+='<p class="cap box">The world <b>cuts</b>: only the Cut column matters. Rest of the world\'s payoffs come later.</p>';
+   if(stg===1)c+='<p class="cap box">The world <b>pollutes</b>: only the Pollute column matters.</p>';
+   if(stg>=2&&b>0)c+=`<p class="cap box">Denmark's Cut payoffs include the green bonus <b>+${b}</b> (4 + ${b} and 1 + ${b}).</p>`;
+   if(stg>=4)c+='<p class="cap">Purple cell = Nash equilibrium.</p>';
+   return c;}},
+
+/* ---------- 5. repeated interaction ---------- */
+{lvl:3,sitTitle:'The situation',visTitle:'Cooperate or cheat?',
+ defs:[['Repeated interaction','The same players meet again and again, so today\'s choice affects tomorrow\'s.',''],
+   ['Conditional strategy','"I cooperate as long as you cooperate; if you cheat, I stop cooperating."','u'],
+   ['Shadow of the future','The future gains from cooperation that you would lose by cheating today.','e']],
+ sit:`<p>Two countries trade every year, using the trade-war payoffs from Lecture 2:</p>
+  <ul class="facts"><li><span>Both choose free trade</span><b>3 each</b></li><li><span>You put up a tariff, the other keeps free trade</span><b>you get 4</b></li><li><span>Both choose tariffs</span><b>2 each</b></li></ul>
+  <p>The other country plays: <b>"I keep free trade as long as you do. If you cheat once, I put up tariffs forever."</b> Then your best reply is a tariff too.</p>`,
+ steps:[
+  {type:'num',unit:'points',text:'Over <b>3 rounds</b>, what is your total if you <b>keep cooperating</b>?',ansText:'9 points',
+   check:v=>near(v,9)?{ok:1}:near(v,3)?{hint:'3 is one round. Add up all 3 rounds.'}:{hint:'Both choose free trade every round: 3 points per round.'},
+   short:'3 + 3 + 3 = <b>9</b>.',long:''},
+  {type:'num',unit:'points',text:'Over <b>3 rounds</b>, what is your total if you <b>cheat in round 1</b>?',ansText:'8 points',
+   check:v=>near(v,8)?{ok:1}:near(v,12)?{hint:'After you cheat, the other stops cooperating: from round 2 on, both have tariffs (2 each).'}
+     :near(v,10)?{hint:'4 + 3 + 3 assumes the other keeps cooperating. But the strategy says: if you cheat, I stop.'}:near(v,4)?{hint:'Add up all 3 rounds.'}
+     :{hint:'Round 1: you cheat and get 4. Rounds 2 and 3: both have tariffs.'},
+   short:'4 + 2 + 2 = <b>8</b> &lt; 9: cheating gives a short-term gain but loses future cooperation.',
+   long:'<p>Cheating gains 1 point today (4 instead of 3) but loses 1 point in <i>every</i> later round (2 instead of 3).</p>'},
+  {type:'slider',min:1,max:10,init:1,slText:v=>`Number of rounds: <b>${v}</b>`,ansText:'3 rounds',
+   text:'What is the <b>smallest number of rounds</b> for which cooperating gives a strictly <b>higher</b> total than cheating in round 1? '+MUTED('Move the slider.'),
+   check:t=>t===3?{ok:1}:t===1?{hint:'With 1 round, cheating gives 4 and cooperating 3: cheating pays.'}:t===2?{hint:'With 2 rounds: 3 + 3 = 6 and 4 + 2 = 6. A tie: we want cooperating to be strictly better.'}:{hint:'Cooperation pays here, but it already pays with fewer rounds.'},
+   onExplain:s=>{s.val=3;},
+   short:'With 3 rounds: 9 &gt; 8. And the gap grows by 1 every extra round.',
+   long:'<p>Totals: cooperate = 3 × rounds; cheat = 4 + 2 × (rounds − 1). The longer the relationship, the more cheating costs.</p>'},
+  {type:'radio',text:'What if the two countries meet only <b>once</b>?',opts:[{id:'ch',label:'Cheat: put up a tariff'},{id:'co',label:'Cooperate: keep free trade'},{id:'eq',label:'It doesn\'t matter'}],ans:'ch',
+   hint:()=>'With one round, there is no future to lose. Compare 4 and 3.',
+   short:'<b>Cheat</b>: with no future, we are back to the one-shot prisoner\'s dilemma from Lecture 2.',long:'<p>That is why repetition helps: the "shadow of the future" disappears if there is no future.</p>'},
+  {type:'radio',text:'Which of these makes cooperation <b>harder</b> to keep up?',
+   opts:[{id:'hide',label:'Cheating is hard for the other country to see'},{id:'long',label:'The countries expect to trade for many more years'},{id:'care',label:'Leaders care a lot about the future'}],ans:'hide',
+   hint:id=>id==='long'?'More rounds make cheating <i>more</i> costly (see the chart).':'Caring about the future makes the lost cooperation feel <i>bigger</i>.',
+   short:'If cheating cannot be <b>seen</b>, it cannot be punished, so cheating pays again.',
+   long:'<p>Repeated interaction works best when (Axelrod 1984): the interaction <b>continues</b>, players <b>care about the future</b>, and cheating is <b>observable</b>. This is why the Paris Agreement relies on regular reviews of every country\'s pledges.</p>'}
+ ],
+ vis:(stg,S)=>vis5(stg,S),
+ cap:(stg,S)=>{if(stg<2)return '';const t=S.steps[2].val,a=coopTot(t),c=cheatTot(t);
+   return `<p class="cap box">${t} round${t>1?'s':''}: cooperate <b>${a}</b> vs. cheat <b>${c}</b> → <b style="color:${a>c?'var(--green)':'var(--red)'}">${a>c?'cooperating pays more':a===c?'a tie':'cheating pays more'}</b>.</p>`;}}
+];
+/* fill match explanations */
+EX.forEach(ex=>ex.steps.forEach(q=>{if(q.type==='match')q.long='<ul>'+q.items.map(it=>`<li><b>${it.label}</b>: ${it.ans}. ${it.why.charAt(0).toUpperCase()+it.why.slice(1)}</li>`).join('')+'</ul>'+q.long;}));
+
+/* ================= state ================= */
+let cur=0;
+const S=[];
+const initVal=q=>q.type==='slider'?q.init:q.type==='num'?'':q.type==='match'?q.items.map(()=>null):[];
+const st=i=>S[i]||(S[i]={scratch:new Set(),steps:EX[i].steps.map(q=>({status:'open',val:initVal(q),more:false,hint:'',extra:''}))});
+const done=s=>s.status==='correct'||s.status==='explained';
+function stage(i){let n=0;for(const s of st(i).steps){if(done(s))n++;else break;}return n;}
+
+/* ================= rendering ================= */
+function renderStatic(){
+  const ex=EX[cur];
+  $('#defs').innerHTML=ex.defs.map(([h,p,c])=>`<div class="card ${c}"><h3>${h}</h3><p>${p}</p></div>`).join('');
+  $('#sit').innerHTML=ex.sit;$('#sitTitle').textContent=ex.sitTitle;$('#visTitle').textContent=ex.visTitle;
+}
+function renderVis(){
+  const ex=EX[cur],stg=stage(cur),state=st(cur);
+  $('#vis').innerHTML=ex.vis(stg,state);
+  $('#legend').innerHTML=ex.legend?ex.legend(stg):'';
+  $('#viscap').innerHTML=ex.cap?ex.cap(stg,state):'';
+}
+function ansLabel(q){
+  if(q.ansText)return `<b>${q.ansText}</b>`;
+  return J([].concat(q.ans).map(id=>'<b>'+q.opts.find(o=>o.id===id).label+'</b>'));
+}
+function isEmpty(q,s){return q.type==='slider'?false:q.type==='num'?!String(s.val).trim():q.type==='match'?s.val.some(v=>v==null):!s.val.length;}
+function renderQs(){
+  const ex=EX[cur],state=st(cur);let h='';
+  state.steps.forEach((s,k)=>{
+    const q=ex.steps[k],visible=k===0||done(state.steps[k-1]),fin=done(s),lock=fin||s.status==='wrong';
+    let body='';
+    if(q.type==='radio'||q.type==='check'){
+      const ans=new Set([].concat(q.ans)),sel=new Set(s.val);
+      body=`<div class="opts">`+q.opts.map(o=>{
+        let cls='opt'+(lock?' dis':'');
+        if(fin){if(ans.has(o.id))cls+=' right';else if(sel.has(o.id))cls+=' miss';}
+        else if(s.status==='wrong'&&sel.has(o.id)&&q.type==='radio')cls+=' miss';
+        return `<label class="${cls}"><input type="${q.type==='radio'?'radio':'checkbox'}" name="q${cur}_${k}" value="${o.id}" ${sel.has(o.id)?'checked':''} ${lock?'disabled':''}><span>${o.label}</span></label>`;
+      }).join('')+'</div>';
+    }
+    if(q.type==='match'){
+      body='<div class="match">'+q.items.map((it,i)=>{
+        let cls='mrow';if(fin||s.status==='wrong')cls+=s.val[i]===it.ans?(fin?' right':''):' miss';
+        return `<div class="${cls}"><span>${it.label}</span><div class="pills">${q.cats.map(c=>`<label class="pill ${s.val[i]===c?'on':''} ${lock?'dis':''}"><input type="radio" name="m${cur}_${k}_${i}" value="${c}" data-mi="${i}" ${lock?'disabled':''}>${c}</label>`).join('')}</div></div>`;
+      }).join('')+'</div>';
+    }
+    if(q.type==='num'){
+      const v=s.status==='explained'?q.ansText.split(' ')[0]:s.val;
+      body=`<div class="numrow"><input type="text" inputmode="decimal" autocomplete="off" placeholder="type a number" value="${String(v).replace(/"/g,'')}" ${lock?'disabled':''} data-num="${k}"><span>${q.unit}</span></div>`;
+    }
+    if(q.type==='slider'){
+      body=`<div class="slrow"><input type="range" min="${q.min}" max="${q.max}" step="1" value="${s.val}" data-sl="${k}" ${lock?'disabled':''}><span class="val" id="slv${k}">${q.slText(s.val)}</span></div>`;
+    }
+    let act='',fb='';
+    if(s.status==='open')act=`<button class="p" data-act="check" ${isEmpty(q,s)?'disabled':''}>Check answer</button>`;
+    if(s.status==='wrong')fb=`<div class="fb bad"><b>Not quite.</b> ${s.hint||''}${s.extra||''}<div class="row"><button class="p" data-act="again">Try again</button><button class="s" data-act="explain">Explain</button></div></div>`;
+    if(s.status==='correct')fb=`<div class="fb ok"><b>Correct!</b> ${q.short} ${q.long?(s.more?`<div style="margin-top:6px">${q.long}</div>`:`<button class="lnk" data-act="more">Show detailed explanation</button>`):''}</div>`;
+    if(s.status==='explained')fb=`<div class="fb info"><b>Explanation.</b> ${q.type==='match'?'':`The correct answer: ${ansLabel(q)}. `}${q.type==='match'?'':q.short}${q.long}</div>`;
+    h+=`<div class="step ${visible?'':'locked'}" data-k="${k}"><div class="qhead"><span class="qnum">${k+1}</span><span>${q.text}</span></div>${body}${act}${fb}</div>`;
+  });
+  $('#qs').innerHTML=h;
+}
+
+/* ================= events ================= */
+$('#qs').addEventListener('change',e=>{
+  const t=e.target;if(t.type!=='checkbox'&&t.type!=='radio')return;
+  const stepEl=t.closest('.step'),k=+stepEl.dataset.k,s=st(cur).steps[k],q=EX[cur].steps[k];
+  if(t.dataset.mi!==undefined){
+    s.val[+t.dataset.mi]=t.value;
+    t.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.querySelector('input').value===t.value));
+  } else if(t.type==='radio')s.val=[t.value];
+  else{
+    let sel=new Set(s.val);
+    if(t.value==='none')t.checked?sel=new Set(['none']):sel.delete('none');
+    else{t.checked?(sel.add(t.value),sel.delete('none')):sel.delete(t.value);}
+    s.val=[...sel];
+    stepEl.querySelectorAll('input').forEach(i=>i.checked=sel.has(i.value));
+  }
+  const b=stepEl.querySelector('[data-act=check]');if(b)b.disabled=isEmpty(q,s);
+});
+$('#qs').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.num!==undefined){const s=st(cur).steps[+t.dataset.num];s.val=t.value;
+    const b=t.closest('.step').querySelector('[data-act=check]');if(b)b.disabled=!t.value.trim();}
+  if(t.dataset.sl!==undefined){const k=+t.dataset.sl,s=st(cur).steps[k];s.val=+t.value;
+    $('#slv'+k).innerHTML=EX[cur].steps[k].slText(s.val);renderVis();}
+});
+$('#qs').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.dataset.num!==undefined){const b=e.target.closest('.step').querySelector('[data-act=check]');if(b&&!b.disabled)b.click();}
+});
+$('#qs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const k=+b.closest('.step').dataset.k,s=st(cur).steps[k],q=EX[cur].steps[k],act=b.dataset.act;
+  if(act==='check'){
+    s.hint='';s.extra='';
+    if(q.type==='num'||q.type==='slider'){
+      const v=q.type==='num'?parseNum(s.val):s.val;
+      if(isNaN(v)){s.status='wrong';s.hint='Please type a number.';}
+      else{const r=q.check(v);s.status=r.ok?'correct':'wrong';s.hint=r.hint||'';}
+    } else if(q.type==='radio'){
+      const id=s.val[0];s.status=id===q.ans?'correct':'wrong';
+      if(s.status==='wrong'){s.hint=q.hint?q.hint(id)||'':'';s.extra=q.extra?q.extra(id):'';}
+    } else if(q.type==='match'){
+      const wrong=q.items.map((it,i)=>s.val[i]===it.ans?null:i).filter(i=>i!==null);
+      s.status=wrong.length?'wrong':'correct';
+      if(wrong.length)s.hint=`${q.items.length-wrong.length} of ${q.items.length} right. Look again at the red ${wrong.length>1?'rows':'row'}.`;
+    } else {
+      const a=new Set(q.ans),g=new Set(s.val);
+      s.status=(a.size===g.size&&[...a].every(x=>g.has(x)))?'correct':'wrong';
+      if(s.status==='wrong')s.hint=q.hint?q.hint(s.val):'';
+    }
+  }
+  if(act==='again'){s.status='open';if(q.type==='num')s.val='';else if(q.type!=='slider')s.val=initVal(q);}
+  if(act==='explain'){s.status='explained';if(q.onExplain)q.onExplain(s);if(q.type==='match')s.val=q.items.map(it=>it.ans);}
+  if(act==='more')s.more=true;
+  refresh();
+  if(act==='again'){const inp=document.querySelector(`.step[data-k="${k}"] input[data-num]`);if(inp)inp.focus();}
+});
+$('#vis').addEventListener('click',e=>{
+  const t=e.target.closest('span.clk');if(!t)return;
+  const sc=st(cur).scratch,k=t.dataset.k;sc.has(k)?sc.delete(k):sc.add(k);renderVis();
+});
+$('#viscap').addEventListener('click',e=>{if(e.target.closest('[data-act=clear]')){st(cur).scratch.clear();renderVis();}});
+
+/* ================= navigation ================= */
+function refresh(){
+  renderVis();renderQs();updateDots();
+  $('#hint').textContent=stage(cur)===EX[cur].steps.length?'All questions done. Continue when ready.':'';
+}
+function updateDots(){
+  document.querySelectorAll('#dots button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',stage(i)===EX[i].steps.length);});
+  $('#meta').innerHTML=`Exercise ${cur+1} of ${EX.length} &nbsp;·&nbsp; Difficulty <span class="lvl">${'●'.repeat(EX[cur].lvl)}${'○'.repeat(5-EX[cur].lvl)}</span>`;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===EX.length-1;
+  $('#prev').style.opacity=cur===0?.4:1;$('#next').style.opacity=cur===EX.length-1?.4:1;
+}
+function go(i,scroll=true){
+  cur=Math.max(0,Math.min(EX.length-1,i));
+  history.replaceState(null,'','#ex'+(cur+1));
+  renderStatic();refresh();
+  if(scroll)window.scrollTo({top:document.querySelector('.topbar').offsetTop-10,behavior:'smooth'});
+}
+$('#dots').innerHTML=EX.map((e,i)=>`<button aria-label="Exercise ${i+1}">${i+1}</button>`).join('');
+$('#dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go([...$('#dots').children].indexOf(b));});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+(function init(){const m=/ex(\d+)/.exec(location.hash);go(m?+m[1]-1:0,false);})();
+</script>
+</body></html>
