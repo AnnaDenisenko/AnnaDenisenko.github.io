@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive exercises: bargaining</title>
+<style>
+
+:root{
+  --bg:#f7f6f3; --card:#fff; --ink:#1f2330; --muted:#6a6f7d; --line:#e3e1dc;
+  --purple:#6b3fa0; --purple-l:rgba(107,63,160,.14); --orange:#d9822b; --green:#2e8b57;
+  --red:#c0392b; --blue:#3b6fb6; --colA:#00823c; --colB:#d26e00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
+a.course{display:inline-block;font-size:.9rem;color:var(--purple);text-decoration:none;margin-bottom:4px}
+a.course:hover{text-decoration:underline}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:1.7rem;margin:.2em 0 .1em}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.defs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.defs .card h3{margin:0 0 4px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.defs .card p{margin:0;font-size:.95rem}
+.defs .card.u h3{color:var(--orange)}
+.defs .card.e h3{color:var(--green)}
+.topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dots button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:.85rem;color:var(--ink)}
+.dots button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.dots button.done:not(.on){background:#e9f5ee;border-color:#9fd2b5}
+.meta{color:var(--muted);font-size:.9rem}
+.lvl{letter-spacing:2px;color:var(--purple)}
+.blocks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"sit vis" "quest vis";grid-template-rows:auto 1fr;gap:14px}
+.b-sit{grid-area:sit}.b-vis{grid-area:vis;align-self:start;position:sticky;top:12px}.b-quest{grid-area:quest}
+.blocks h2{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+@media(max-width:860px){
+  .defs{grid-template-columns:1fr}
+  .blocks{grid-template-columns:1fr;grid-template-areas:"sit" "vis" "quest"}
+  .b-vis{position:static}
+}
+.b-sit p{margin:.3em 0}
+.b-sit ul,.b-sit ol{margin:.3em 0 .3em 1.2em;padding:0}
+.b-sit li{margin:.15em 0}
+.facts{list-style:none;margin:8px 0!important;padding:0!important}
+.facts li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0}
+.facts li b{font-variant-numeric:tabular-nums}
+.ranks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
+.ranks h4{margin:0 0 4px;font-size:.9rem}
+.ranks ol{margin:0 0 0 1.2em;padding:0;font-size:.95rem}
+.small{font-size:.88rem;color:var(--muted)}
+.va{color:var(--colA)}.vb{color:var(--colB)}
+/* chart */
+#vis svg{width:100%;height:auto;display:block;max-width:480px;margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:10px;justify-content:center}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:50%}
+.lg i.ln{width:20px;height:0;border-radius:0;border-top:3px solid var(--purple)}
+.lg i.dsh{width:20px;height:0;border-radius:0;border-top:3px dashed #888}
+.lg i.sq{border-radius:3px}
+.cap{font-size:.92rem;text-align:center;margin:10px auto 0;max-width:440px}
+.cap.box{background:#f3f0f9;border-radius:8px;padding:8px 10px}
+/* matrix */
+.mx{border-collapse:collapse;margin:6px auto;font-size:1.1rem}
+.mx td.c{border:1.5px solid #333;width:96px;height:60px;text-align:center;font-variant-numeric:tabular-nums;transition:background .3s}
+.mx.m3 td.c{width:80px;height:54px;font-size:1rem}
+.mx th{font-weight:600;font-size:.95rem;transition:opacity .3s}
+.mx th.col{padding:4px 6px;color:var(--colB)}
+.mx th.row{padding:4px 10px;text-align:right;color:var(--colA)}
+.mx th.g{opacity:.3}
+.mx .plb{color:var(--colB);font-weight:700;text-align:center;padding-bottom:2px;font-size:.95rem}
+.mx .pla{color:var(--colA);font-weight:700;font-size:.95rem;padding-right:4px}
+.mx .pla span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block}
+.mx span.q{color:#c9c9c9}
+.mx .cm{color:#999}
+.mx span.u{color:var(--red)!important;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:700}
+.mx td.c.gray{background:#f2f2f2}
+.mx td.c.gray span{color:#cfcfcf!important}
+.mx span.dim{color:#cfcfcf!important}
+.mx span.u.dim{text-decoration-color:#e7b3ad}
+.mx td.c.ne{background:var(--purple-l);box-shadow:inset 0 0 0 2px var(--purple)}
+.mx span.clk{cursor:pointer;padding:1px 5px;border-radius:4px}
+.mx span.clk:hover{background:#f6e5e3}
+/* questions */
+.step{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:#fff}
+.step.locked{display:none}
+.qhead{display:flex;gap:10px;margin-bottom:10px;font-weight:600}
+.qnum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.muted{font-weight:400;color:var(--muted)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.opts.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.opts.g3 .opt.full{grid-column:1/-1}
+@media(max-width:520px){.opts.g3{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fcfcfb}
+.opt:hover{border-color:#b9a9d6}
+.opt input{accent-color:var(--purple)}
+.opt.right{border-color:var(--green);background:#eaf6ef}
+.opt.miss{border-color:var(--red);background:#fbeceb}
+.opt.dis{cursor:default}
+.numrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.numrow input{font:inherit;width:110px;padding:6px 10px;border:1px solid #cfc8dc;border-radius:8px}
+.numrow input:focus{outline:2px solid var(--purple-l);border-color:var(--purple)}
+.numrow input:disabled{background:#f4f4f2;color:var(--ink)}
+.slrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.slrow input[type=range]{flex:1;min-width:160px;accent-color:var(--purple)}
+.slrow .val{min-width:170px;font-variant-numeric:tabular-nums}
+button.p{font:inherit;background:var(--purple);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+button.p:disabled{opacity:.4;cursor:not-allowed}
+button.s{font:inherit;background:#fff;color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:6px 14px;cursor:pointer}
+button.s.sm{font-size:.82rem;padding:3px 10px}
+button.lnk{font:inherit;background:none;border:0;color:var(--purple);text-decoration:underline;cursor:pointer;padding:0}
+.fb{margin-top:10px;border-radius:8px;padding:10px 12px;font-size:.95rem}
+.fb.ok{background:#eaf6ef;border-left:4px solid var(--green)}
+.fb.bad{background:#fbeceb;border-left:4px solid var(--red)}
+.fb.info{background:#f3f0f9;border-left:4px solid var(--purple)}
+.fb ul{margin:.4em 0 .4em 1.1em;padding:0}
+.fb li{margin:.25em 0}
+.fb p{margin:.5em 0}
+.fb .row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.defn{background:#fff;border:1px solid #d6c8ea;border-left:4px solid var(--purple);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.93rem}
+.defn b.t{color:var(--purple)}
+.pop{animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;align-items:center}
+.nav .hint{color:var(--muted);font-size:.9rem;text-align:center;flex:1}
+footer{margin-top:30px;color:var(--muted);font-size:.8rem;text-align:center}
+
+/* --- additions for Lecture 3 --- */
+.ptab{border-collapse:collapse;margin:4px auto 12px;font-size:.95rem;font-variant-numeric:tabular-nums}
+.ptab th,.ptab td{padding:5px 10px;text-align:center;border-bottom:1px solid var(--line)}
+.ptab th{font-weight:600;font-size:.85rem;color:var(--muted)}
+.ptab td:first-child,.ptab th:first-child{text-align:left;font-weight:600;color:var(--ink)}
+.ptab .hc{background:#f1eff7}
+.ptab .diff td{color:var(--red);font-weight:600;border-bottom:0}
+.ptab .q{color:#c9c9c9}
+.match{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:#fcfcfb;flex-wrap:wrap}
+.mrow.right{border-color:var(--green);background:#eaf6ef}
+.mrow.miss{border-color:var(--red);background:#fbeceb}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{border:1px solid #cfc8dc;border-radius:99px;padding:2px 10px;font-size:.85rem;cursor:pointer;background:#fff;user-select:none}
+.pill input{display:none}
+.pill.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.pill.dis{cursor:default}
+.subhead{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px;font-weight:600;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="course" href="/teaching/BScIBPPOLITICALSCIENCE/">← Copenhagen Business School: BSc IBP POLITICAL SCIENCE</a>
+  <h1>Bargaining &amp; outside options</h1>
+  <p class="sub">Practice exercises for Lecture 4 (Bargaining, Commitment, and Political Conflict). No grades; move on whenever you like.</p>
+
+  <div class="defs" id="defs"></div>
+
+  <div class="topbar">
+    <div class="dots" id="dots"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="blocks">
+    <section class="card b-sit"><h2 id="sitTitle">The situation</h2><div id="sit"></div></section>
+    <section class="card b-vis"><h2 id="visTitle">Picture</h2><div id="vis"></div><div id="legend" class="legend"></div><div id="viscap"></div></section>
+    <section class="b-quest"><div id="qs"></div></section>
+  </div>
+
+  <div class="nav">
+    <button class="s" id="prev">← Previous</button>
+    <div class="hint" id="hint"></div>
+    <button class="p" id="next">Next exercise →</button>
+  </div>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const J=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const fmt=n=>String(+(+n).toFixed(2));
+const near=(a,b)=>Math.abs(a-b)<1e-3;
+const MUTED=t=>`<span class="muted">${t}</span>`;
+const aA=t=>`<span class="va">${t}</span>`, aB=t=>`<span class="vb">${t}</span>`;
+function parseNum(s){
+  if(s==null)return NaN;
+  s=String(s).toLowerCase().replace(/points?|dkk|kr\.?|thousand|rounds?/g,'').replace(/\s+/g,'').replace(',','.');
+  let pct=false; if(s.endsWith('%')){pct=true;s=s.slice(0,-1);}
+  let v=NaN,m;
+  if((m=s.match(/^(\d*\.?\d+)\/(\d*\.?\d+)$/)))v=+m[1]/+m[2];
+  else if(/^-?\d*\.?\d+$/.test(s))v=+s;
+  return pct?v/100:v;
+}
+const svgOpen=(W,H,label)=>`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c0392b"/></marker></defs>`;
+const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-size="11" ${o} paint-order="stroke" stroke="#fff" stroke-width="3">${t}</text>`;
+
+/* ================= shared drawing ================= */
+const CA='#00823c', CB='#d26e00', PU='#6b3fa0', RED='#c0392b';
+const fA=t=>`<tspan fill="${CA}">${t}</tspan>`, fB=t=>`<tspan fill="${CB}">${t}</tspan>`;
+function axisLine(sx,y,lo,hi,step,lab){
+  let s=`<line x1="${sx(lo)}" y1="${y}" x2="${sx(hi)+10}" y2="${y}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  for(let v=lo;v<=hi;v+=step)s+=`<line x1="${sx(v)}" y1="${y-4}" x2="${sx(v)}" y2="${y+4}" stroke="#333"/><text x="${sx(v)}" y="${y-8}" font-size="10" text-anchor="middle" fill="#555">${v}</text>`;
+  if(lab)s+=`<text x="${sx(hi)+12}" y="${y+4}" font-size="11" fill="#333">${lab}</text>`;
+  return s;
+}
+const dot=(x,y,col,r=6)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${col}"/>`;
+const ring=(x,y,r=11)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${RED}" stroke-width="2.5"/>`;
+const bracket=(x1,x2,y,col,label)=>`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="5" stroke-linecap="round"/><line x1="${x1}" y1="${y-7}" x2="${x1}" y2="${y+7}" stroke="${col}" stroke-width="2"/><line x1="${x2}" y1="${y-7}" x2="${x2}" y2="${y+7}" stroke="${col}" stroke-width="2"/>`+(label?T((x1+x2)/2,y+19,label,`text-anchor="middle" fill="${col}" font-weight="600"`):'');
+
+/* ================= Exercise 1: game tree ================= */
+const PAY1=[[80,20],[25,35],[55,45],[25,35]], PAY1T=[[80,20],[25,15],[55,45],[25,15]];
+function tree1(pay,wins,hl,changed){
+  const W=440,H=300,F=[220,46],U1=[110,145],U2=[330,145],L=[[50,240],[170,240],[270,240],[390,240]];
+  let s=svgOpen(W,H,'Game tree: firm then union');
+  const E={FL:[F,U1,'Low wage','end',-10],FH:[F,U2,'High wage','start',10],LA:[U1,L[0],'Accept','end',-8],LS:[U1,L[1],'Strike','start',8],HA:[U2,L[2],'Accept','end',-8],HS:[U2,L[3],'Strike','start',8]};
+  Object.entries(E).forEach(([id,[a,b,lab,an,dx]])=>{
+    const w=wins.has(id);
+    const ux=b[0]-a[0],uy=b[1]-a[1],d=Math.hypot(ux,uy),ex=b[0]-ux/d*(id[0]==='F'?10:4),ey=b[1]-uy/d*(id[0]==='F'?10:4);
+    s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${ex}" y2="${ey}" stroke="${w?RED:'#444'}" stroke-width="${w?4:1.8}" marker-end="url(${w?'#arr':'#ar'})"/>`;
+    s+=T((a[0]+b[0])/2+dx,(a[1]+b[1])/2-2,lab,`text-anchor="${an}" font-size="12"`);
+  });
+  s+=dot(...F,'#111',6)+T(F[0],F[1]-14,`<tspan fill="${CA}" font-weight="700">Firm</tspan>`,'text-anchor="middle" font-size="13"');
+  [U1,U2].forEach((u,i)=>{s+=dot(...u,'#111',6)+T(u[0]+(i?14:-14),u[1]+4,`<tspan fill="${CB}" font-weight="700">Union</tspan>`,`text-anchor="${i?'start':'end'}" font-size="13"`);});
+  L.forEach((l,i)=>{
+    if(hl===i)s+=`<rect x="${l[0]-34}" y="${l[1]+4}" width="68" height="26" rx="6" fill="${PU}" fill-opacity=".14" stroke="${PU}"/>`;
+    s+=`<text x="${l[0]}" y="${l[1]+22}" font-size="14" text-anchor="middle" font-weight="600">${fA(pay[i][0])}, <tspan fill="${changed&&changed.includes(i)?RED:CB}">${pay[i][1]}</tspan></text>`;
+  });
+  return s+'</svg>';
+}
+
+/* ================= Exercise 2: splitting the pie ================= */
+const PR2=[{u:40,f:10},{u:40,f:10},{u:55,f:10},{u:40,f:30},{u:40,f:70},{u:45,f:10,fair:1}];
+function vis2(stg){
+  const k=Math.min(stg,5),p=PR2[k],solved=stg>k,showAcc=k>0||solved;
+  const W=440,H=250,sx=v=>36+v/100*(W-80);
+  let s=svgOpen(W,H,'Firm demand and acceptance');
+  s+=axisLine(sx,60,0,100,10,'x');
+  s+=T(sx(0),22,`firm demands <tspan font-style="italic">x</tspan>; union gets 100 − <tspan font-style="italic">x</tspan>`,'font-size="11" fill="#555"');
+  const top=100-p.u;
+  if(showAcc){
+    s+=bracket(sx(0),sx(top),96,CB,`union ${p.fair?'(fairness) ':''}accepts x ≤ ${top}`);
+    s+=bracket(sx(p.f),sx(100),136,CA,`firm prefers a deal: x ≥ ${p.f}`);
+    if(top>=p.f)s+=`<rect x="${sx(p.f)}" y="54" width="${sx(top)-sx(p.f)}" height="12" fill="${PU}" fill-opacity=".3"/>`+T((sx(p.f)+sx(top))/2,80,'deal range','text-anchor="middle" fill="#6b3fa0" font-size="10" font-weight="600"');
+  }
+  if(solved||k===0&&stg>0){
+    if(top>=p.f){
+      s+=ring(sx(top),60)+dot(sx(top),60,RED,4);
+      const y=178,w=W-80;
+      s+=`<rect x="36" y="${y}" width="${w*top/100}" height="26" fill="${CA}" fill-opacity=".55"/><rect x="${36+w*top/100}" y="${y}" width="${w*(100-top)/100}" height="26" fill="${CB}" fill-opacity=".6"/>`;
+      s+=T(36+w*top/200,y+17,`firm ${top}`,'text-anchor="middle" font-weight="600"')+T(36+w*top/100+w*(100-top)/200,y+17,`union ${100-top}`,'text-anchor="middle" font-weight="600"');
+    } else s+=T(W/2,195,'No x works for both: no deal (strike)','text-anchor="middle" fill="#c0392b" font-weight="700" font-size="13"');
+  }
+  return s+'</svg>';
+}
+
+/* ================= Exercise 3: status quo ================= */
+const G3=14,L3=20;
+const acc3=q=>[Math.min(q,2*G3-q),Math.max(q,2*G3-q)];
+const out3=q=>{const [a,b]=acc3(q);return Math.min(Math.max(L3,a),b);};
+function vis3(stg,S){
+  const k=Math.min(stg,4),sq=k<=2?10:k===3?16:S.steps[4].val;
+  const showAcc=(k===1&&stg>1)||k>=2, showOut=(k===2&&stg>2)||(k===3&&stg>3)||k>=4;
+  const W=440,H=160,sx=v=>30+v/20*(W-70);
+  let s=svgOpen(W,H,'Policy line');
+  s+=T(30,16,'minimum wage, $ per hour','font-size="11" fill="#555"');
+  s+=axisLine(sx,60,0,20,2,'');
+  const [a,b]=acc3(sq);
+  if(showAcc)s+=bracket(sx(a),sx(b),100,CA,`governor signs ${a} to ${b}`);
+  s+=dot(sx(sq),60,'#888',6)+T(sx(sq),80,`status quo ${sq}`,`text-anchor="middle" fill="#666"`);
+  s+=dot(sx(G3),60,CA,6)+T(sx(G3),148,'Governor 14','text-anchor="middle" fill="#00823c" font-weight="600"');
+  s+=dot(sx(L3),60,CB,6)+T(sx(L3),148,'Legislature 20','text-anchor="end" fill="#d26e00" font-weight="600"');
+  if(showOut)s+=ring(sx(out3(sq)),60)+T(sx(out3(sq)),36,`outcome ${out3(sq)}`,'text-anchor="middle" fill="#c0392b" font-weight="700"');
+  s+='</svg>';
+  if(k>=4){
+    const W2=440,H2=250,m={l:44,r:16,t:16,b:40},sx2=v=>m.l+v/20*(W2-m.l-m.r),sy2=v=>H2-m.b-(v-10)/11*(H2-m.t-m.b);
+    s+=`<div class="subhead">Outcome for every status quo</div>`+svgOpen(W2,H2,'Outcome by status quo');
+    for(let v=0;v<=20;v+=4)s+=`<line x1="${sx2(v)}" y1="${sy2(10)}" x2="${sx2(v)}" y2="${sy2(21)}" stroke="#eee"/><text x="${sx2(v)}" y="${sy2(10)+16}" font-size="10" text-anchor="middle" fill="#555">${v}</text>`;
+    for(let v=10;v<=20;v+=2)s+=`<line x1="${sx2(0)}" y1="${sy2(v)}" x2="${sx2(20)}" y2="${sy2(v)}" stroke="#eee"/><text x="${sx2(0)-6}" y="${sy2(v)+4}" font-size="10" text-anchor="end" fill="#555">${v}</text>`;
+    s+=`<text x="${sx2(10)}" y="${H2-6}" font-size="11" text-anchor="middle">status quo</text><text x="12" y="${sy2(15.5)}" font-size="11" text-anchor="middle" transform="rotate(-90 12 ${sy2(15.5)})">outcome</text>`;
+    if(stg>=5){const pts=[];for(let q=0;q<=20;q+=.25)pts.push(sx2(q)+','+sy2(out3(q)));s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${PU}" stroke-width="3"/>`;
+      s+=`<rect x="${sx2(14)}" y="${sy2(21)}" width="${sx2(20)-sx2(14)}" height="${sy2(10)-sy2(21)}" fill="#999" fill-opacity=".1"/>`+T((sx2(14)+sx2(20))/2,sy2(11),'gridlock','text-anchor="middle" fill="#666"');}
+    s+=`<line x1="${sx2(sq)}" y1="${sy2(10)}" x2="${sx2(sq)}" y2="${sy2(out3(sq))}" stroke="${RED}" stroke-dasharray="3 3"/>`+ring(sx2(sq),sy2(out3(sq)),7);
+    s+=`<line x1="${sx2(0)}" y1="${sy2(10)}" x2="${sx2(20)+8}" y2="${sy2(10)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx2(0)}" y1="${sy2(10)}" x2="${sx2(0)}" y2="${sy2(21)-4}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/></svg>`;
+  }
+  return s;
+}
+
+/* ================= Exercise 4: asymmetric information ================= */
+const tough4=p=>80*p/100;
+function vis4(stg,S){
+  let h=`<table class="ptab"><tr><th>union type</th><th>outside option</th><th>accepts demands up to</th></tr>
+    <tr><td>Strong</td><td>40</td><td>${stg>=1?'<b>60</b>':'<span class="q">?</span>'}</td></tr>
+    <tr><td>Weak</td><td>20</td><td>${stg>=2?'<b>80</b>':'<span class="q">?</span>'}</td></tr></table>`;
+  if(stg<2)return h;
+  const p=stg>=4?S.steps[3].val:stg===3?S.steps[3].val:50;
+  const W=440,H=270,m={l:46,r:16,t:14,b:44},sx=v=>m.l+v/100*(W-m.l-m.r),sy=v=>H-m.b-v/90*(H-m.t-m.b);
+  let s=svgOpen(W,H,'Firm expected payoff by belief');
+  for(let v=0;v<=100;v+=20)s+=`<line x1="${sx(v)}" y1="${sy(0)}" x2="${sx(v)}" y2="${sy(90)}" stroke="#eee"/><text x="${sx(v)}" y="${sy(0)+16}" font-size="10" text-anchor="middle" fill="#555">${v}%</text>`;
+  for(let v=0;v<=80;v+=20)s+=`<line x1="${sx(0)}" y1="${sy(v)}" x2="${sx(100)}" y2="${sy(v)}" stroke="#eee"/><text x="${sx(0)-6}" y="${sy(v)+4}" font-size="10" text-anchor="end" fill="#555">${v}</text>`;
+  s+=`<text x="${sx(50)}" y="${H-8}" font-size="11" text-anchor="middle">firm's belief that the union is <tspan font-weight="700">weak</tspan></text><text x="12" y="${sy(45)}" font-size="11" text-anchor="middle" transform="rotate(-90 12 ${sy(45)})">firm's expected payoff</text>`;
+  s+=`<line x1="${sx(0)}" y1="${sy(60)}" x2="${sx(100)}" y2="${sy(60)}" stroke="#888" stroke-width="2.5" stroke-dasharray="7 5"/>`+T(sx(2),sy(60)-7,'generous: 60 for sure','fill="#666"');
+  if(stg>=3){
+    s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(100)}" y2="${sy(80)}" stroke="${PU}" stroke-width="3"/>`+T(sx(30),sy(tough4(30))+18,'tough: 80 × belief','fill="#6b3fa0"');
+    if(stg>=4){s+=`<line x1="${sx(75)}" y1="${sy(0)}" x2="${sx(75)}" y2="${sy(60)}" stroke="${PU}" stroke-dasharray="2 3"/>`+T(sx(75)+4,sy(0)-6,'75%','fill="#6b3fa0" font-weight="700"');}
+  }
+  s+=`<line x1="${sx(p)}" y1="${sy(0)}" x2="${sx(p)}" y2="${sy(Math.max(60,tough4(p)))}" stroke="#d9822b" stroke-dasharray="4 3"/>`;
+  if(stg>=2&&stg<3)s+=dot(sx(50),sy(60),'#888',5);
+  if(stg>=3)s+=ring(sx(p),sy(tough4(p)),7)+T(sx(p)+9,sy(tough4(p))+16,`tough: ${fmt(tough4(p))}`,'fill="#6b3fa0" font-weight="600"');
+  s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(100)+8}" y2="${sy(0)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(0)}" y2="${sy(90)-4}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/></svg>`;
+  return h+s;
+}
+
+/* ================= Exercise 5: the 2013 lockout ================= */
+const LAW=8, OLD=2, COST=1, KLLOCK=LAW-COST;
+const thr5=q=>q*LAW+(1-q)*OLD+COST;
+function vis5(stg,S){
+  const k=Math.min(stg,5), q=k<=1?1:k<=3?.5:S.steps[4].val;
+  const T5=thr5(q), showAcc=k>=1||stg>0, showKL=k>=3, showOut=(k===1&&stg>1)||(k===3&&stg>3)||k>=4;
+  const W=440,H=200,sx=v=>30+v/10*(W-70);
+  let s=svgOpen(W,H,'Who controls teachers time');
+  s+=T(30,16,'0 = strict national rules … 10 = the principal decides everything','font-size="11" fill="#555"');
+  s+=axisLine(sx,60,0,10,1,'');
+  if(showAcc)s+=bracket(sx(0),sx(Math.min(10,T5)),100,CB,`DLF accepts ${fmt(T5)} or less`);
+  if(showKL)s+=`<line x1="${sx(KLLOCK)}" y1="118" x2="${sx(KLLOCK)}" y2="150" stroke="${CA}" stroke-width="2" stroke-dasharray="4 3"/>`+T(sx(KLLOCK),164,'KL\'s lockout = as good as 7','text-anchor="middle" fill="#00823c" font-weight="600"');
+  s+=dot(sx(0),60,CB)+T(sx(0),80,'DLF','text-anchor="middle" fill="#d26e00" font-weight="700"');
+  s+=dot(sx(OLD),60,'#888')+T(sx(OLD),80,'old rules','text-anchor="middle" fill="#666"');
+  s+=dot(sx(LAW),60,PU)+T(sx(LAW),80,'law','text-anchor="middle" fill="#6b3fa0" font-weight="600"');
+  s+=dot(sx(10),60,CA)+T(sx(10),80,'KL','text-anchor="middle" fill="#00823c" font-weight="700"');
+  if(showOut){
+    if(T5>=KLLOCK||k<3)s+=ring(sx(Math.min(10,T5)),60)+T(sx(Math.min(10,T5)),38,`deal at ${fmt(T5)}`,'text-anchor="middle" fill="#c0392b" font-weight="700"');
+    else s+=T(W/2,192,`KL prefers lockout (7) to a deal at ${fmt(T5)}: LOCKOUT, then law at 8`,'text-anchor="middle" fill="#c0392b" font-weight="700"');
+  }
+  return s+'</svg>';
+}
+
+/* ================= exercise definitions ================= */
+const R=(id,label)=>({id,label});
+const EX=[
+/* ---------- 1 ---------- */
+{lvl:1,sitTitle:'The situation',visTitle:'Game tree',
+ defs:[['Sequential game','Players move one after another, and later players see what earlier players did.',''],
+   ['Backward induction','Solve from the <b>end</b>: first find what the last player does, then what the earlier player does, knowing this.','u'],
+   ['Outside option','What a player gets if there is <b>no deal</b>.','e']],
+ sit:`<p>A ${aA('firm')} offers a <b>low</b> or a <b>high</b> wage. The ${aB('union')} sees the offer, then <b>accepts</b> or <b>strikes</b>.</p>
+  <p>Payoffs are written (${aA('firm')}, ${aB('union')}). After a strike, each side gets its outside option: ${aA('25')} and ${aB('35')}, whatever the wage was.</p>`,
+ steps:[
+  {type:'radio',text:'Who moves <b>first</b>?',opts:[R('f',aA('The firm')),R('u',aB('The union')),R('b','Both at the same time')],ans:'f',
+   hint:id=>id==='b'?'That was Lecture 2 (payoff matrix). Here players move in turn: read the tree from the top.':'Read the tree from the top: who decides at the first dot?',
+   short:'The <b>firm</b>: its dot is at the top of the tree.',long:''},
+  {type:'radio',text:'The wage is <b>low</b>. What does the union do?',opts:[R('a','Accept'),R('s','Strike')],ans:'s',
+   hint:()=>'Compare the union\'s payoffs (second numbers) after Low wage: Accept gives 20, Strike gives 35.',
+   short:'<b>Strike</b>: 35 &gt; 20 (red arrow).',long:''},
+  {type:'radio',text:'The wage is <b>high</b>. What does the union do?',opts:[R('a','Accept'),R('s','Strike')],ans:'a',
+   hint:()=>'Compare the union\'s payoffs after High wage: Accept gives 45, Strike gives 35.',
+   short:'<b>Accept</b>: 45 &gt; 35.',long:''},
+  {type:'radio',text:'Knowing how the union will react, what does the firm offer?',
+   opts:[R('l','Low wage'),R('h','High wage'),R('x','It doesn\'t matter')],ans:'h',
+   hint:id=>id==='l'?'<b>Think ahead!</b> The firm never gets 80: after a low wage the union strikes, and the firm gets only 25.':'Follow the red arrows: Low leads to 25 for the firm, High leads to 55.',
+   short:'<b>High wage</b>: it leads to 55; a low wage leads to a strike and 25.',
+   long:'<p>The firm would love 80, but it sees the strike coming. This is backward induction: the firm\'s choice depends on what the union will do <i>later</i>.</p>'},
+  {type:'radio',text:'What is the <b>outcome</b> of the game?',opts:[R('0','(80, 20)'),R('1','(25, 35)'),R('2','(55, 45)'),R('3','(25, 35) after a high wage')],ans:'2',
+   hint:()=>'Follow the red arrows from the top all the way down.',
+   short:'High wage, accepted: <b>(55, 45)</b>.',long:''},
+  {type:'radio',text:'<b>Twist:</b> the union\'s strike fund runs dry. A strike now gives the union only <b>15</b> (red numbers). What happens now?',
+   opts:[R('l','Firm offers a low wage, union accepts: (80, 20)'),R('h','Firm offers a high wage, union accepts: (55, 45)'),R('s','Firm offers a low wage, union strikes: (25, 15)')],ans:'l',
+   hint:id=>id==='h'?'Redo the last move first: after a <i>low</i> wage, does the union still strike (20 vs 15)?':'Redo the last move: after a low wage, the union compares Accept 20 with Strike 15.',
+   short:'After a low wage the union now accepts (20 &gt; 15), so the firm offers <b>low</b> and gets 80.',
+   long:'<p>Nothing changed except the union\'s <b>outside option</b>, yet the union\'s pay fell from 45 to 20. A weak outside option means a weak bargaining position. (Recall Boeing 2014 vs 2024.)</p>'}
+ ],
+ vis:stg=>{
+   if(stg<5){const w=new Set();if(stg>=2)w.add('LS');if(stg>=3)w.add('HA');if(stg>=4)w.add('FH');return tree1(PAY1,w,null);}
+   const w=new Set();if(stg>=6){w.add('LA');w.add('HA');w.add('FL');}
+   return tree1(PAY1T,w,stg>=6?0:null,[1,3]);
+ },
+ cap:stg=>'<p class="cap small">First number = '+aA('firm')+', second = '+aB('union')+'. Red arrows = the choice each player makes.</p>'+(stg>=5?'<p class="cap box">Twist: strike payoffs for the union changed from 35 to <b style="color:var(--red)">15</b>.</p>':'')},
+
+/* ---------- 2 ---------- */
+{lvl:2,sitTitle:'The situation',visTitle:'Who gets what?',
+ defs:[['Outside option','What a player gets if there is <b>no deal</b>.',''],
+   ['Accept if…','a player accepts a deal that gives it <b>at least</b> its outside option.','u'],
+   ['Bargaining range','All splits that both sides prefer to no deal.','e']],
+ sit:`<p>A ${aA('firm')} and a ${aB('union')} split a profit of <b>100</b>. The firm demands an amount <i>x</i>; the union gets 100 − <i>x</i>. The union <b>accepts</b> or <b>rejects</b> (strikes).</p>
+  <ul class="facts"><li><span>Firm's outside option (after a strike)</span><b>10</b></li><li><span>Union's outside option (after a strike)</span><b>40</b></li></ul>
+  <p class="small">Each question below changes one number. The picture always shows the numbers of the current question.</p>`,
+ steps:[
+  {type:'num',unit:'',text:'What is the <b>largest demand</b> <i>x</i> the union still accepts?',ansText:'60',
+   check:v=>near(v,60)?{ok:1}:near(v,40)?{hint:'40 is what the union needs to <i>keep</i>. The union keeps 100 − x.'}:{hint:'The union accepts if 100 − x ≥ 40.'},
+   short:'100 − x ≥ 40 → x ≤ <b>60</b>.',long:''},
+  {type:'num',unit:'',text:'So what does the firm <b>demand</b>?',ansText:'60',
+   check:v=>near(v,60)?{ok:1}:v>60?{hint:'Above 60 the union strikes, and the firm gets only 10.'}:{hint:'The firm wants x as big as possible, as long as the union still accepts.'},
+   short:'<b>60</b>: the edge of the union\'s acceptance interval. Split: firm 60, union 40.',
+   long:'<p>The proposer gets everything above the other side\'s outside option.</p>'},
+  {type:'num',unit:'',text:'A tight labour market raises the union\'s outside option to <b>55</b>. What does the firm demand now?',ansText:'45',
+   check:v=>near(v,45)?{ok:1}:near(v,55)?{hint:'55 is what the <i>union</i> must get. The firm demands what is left.'}:{hint:'The union now accepts if 100 − x ≥ 55.'},
+   short:'x ≤ 100 − 55 = <b>45</b>. A better outside option for the union means a bigger share.',long:''},
+  {type:'radio',text:'Back to the union\'s option of 40. Now the <b>firm\'s</b> outside option rises from 10 to <b>30</b>. What changes?',
+   opts:[R('n','Nothing: the firm still demands 60'),R('m','The firm demands more'),R('l','The firm demands less')],ans:'n',
+   hint:()=>'Who decides whether to accept? Whose outside option sets the limit?',
+   short:'<b>Nothing</b>: only the responder\'s outside option sets the limit (as long as 60 still beats the firm\'s own 30).',
+   long:'<p>The firm makes the offer, so its own outside option only matters if the best deal falls below it.</p>'},
+  {type:'radio',text:'Now the firm\'s outside option is <b>70</b> (it could easily move production) and the union\'s is <b>40</b>. What happens?',
+   opts:[R('60','The firm demands 60 and the union accepts'),R('70','The firm demands 70 and the union accepts'),R('no','No deal: there is no split both prefer to a strike')],ans:'no',
+   hint:id=>id==='60'?'Would the firm accept 60 when it can get 70 without a deal?':id==='70'?'With x = 70 the union gets 30 &lt; 40. Would it accept?':'',
+   short:'70 + 40 = 110 &gt; 100: the pie is too small to give both their outside options. <b>No deal</b>.',
+   long:'<p>A deal exists only if the outside options add up to <b>less</b> than the pie. Here the firm needs x ≥ 70 and the union needs x ≤ 60: the green and orange intervals do not overlap.</p>'},
+  {type:'num',unit:'',text:'Back to options 10 and 40. But the union cares about <b>fairness</b>: it rejects any deal that gives it less than <b>45</b> (even though 40 &lt; 45). What does the firm demand?',ansText:'55',
+   check:v=>near(v,55)?{ok:1}:near(v,60)?{hint:'With 60 the union gets 40, below its fairness line of 45: it rejects.'}:{hint:'The union now accepts if 100 − x ≥ 45.'},
+   short:'x ≤ 100 − 45 = <b>55</b>. A smart proposer takes fairness norms into account.',
+   long:'<p>Recall the ultimatum game: many people reject insulting offers. Fairness works like a higher outside option.</p>'}
+ ],
+ vis:stg=>vis2(stg),
+ cap:stg=>{const k=Math.min(stg,5),p=PR2[k];return `<p class="cap box">Current numbers: firm's option <b>${p.f}</b>, union's ${p.fair?'fairness line':'option'} <b>${p.u}</b>.</p>`;}},
+
+/* ---------- 3 ---------- */
+{lvl:3,sitTitle:'The situation',visTitle:'The policy line',
+ defs:[['Status quo','The policy that stays in place if no new agreement is reached.',''],
+   ['Ideal point','The policy a player likes best. The closer a policy is to it, the better.','u'],
+   ['Acceptance set','All policies the veto player likes at least as much as the status quo.','e']],
+ sit:`<p>A US state's minimum wage is <b>$10</b> per hour. The ${aB('legislature')} proposes a new wage; the ${aA('governor')} <b>signs</b> or <b>vetoes</b> it. After a veto, the status quo stays.</p>
+  <ul class="facts"><li><span>${aA('Governor')}'s ideal point</span><b>$14</b></li><li><span>${aB('Legislature')}'s ideal point</span><b>$20</b></li></ul>
+  <p class="small">Each player likes a wage more the closer it is to its ideal point.</p>`,
+ steps:[
+  {type:'radio',text:'Does the governor prefer <b>10</b> or <b>19</b>?',opts:[R('10','10'),R('19','19'),R('eq','She is indifferent')],ans:'10',
+   hint:()=>'Measure distances from 14: how far is 10? How far is 19?',
+   short:'10 is 4 away from 14; 19 is 5 away: she prefers <b>10</b>.',long:''},
+  {type:'radio',text:'What is the governor\'s <b>acceptance set</b>?',opts:[R('a','10 to 14'),R('b','10 to 18'),R('c','14 to 20'),R('d','10 to 20')],ans:'b',
+   hint:id=>id==='a'?'She also likes some wages above 14: what else is 4 away from 14?':id==='d'?'20 is 6 away from 14, further than the status quo.':'The set must contain the status quo, 10.',
+   short:'10 is 4 away from 14, and so is 18: she signs anything from <b>10 to 18</b>.',long:''},
+  {type:'num',unit:'$',text:'What does the legislature <b>propose</b>?',ansText:'$18',
+   check:v=>near(v,18)?{ok:1}:near(v,20)?{hint:'20 is outside the acceptance set: the governor would veto it.'}:near(v,14)?{hint:'14 is the governor\'s ideal. The legislature wants to get as close to 20 as it can.'}:{hint:'The point in the acceptance set closest to 20.'},
+   short:'<b>18</b>: the point in the acceptance set closest to 20. The governor signs.',
+   long:'<p>The governor wanted 14 but signs 18, because 18 is no worse for her than the status quo.</p>'},
+  {type:'num',unit:'$',text:'Suppose instead the status quo is <b>16</b>. What is the outcome?',ansText:'$16',
+   check:v=>near(v,16)?{ok:1}:near(v,20)||near(v,18)?{hint:'The governor now signs only wages from 12 to 16. Anything to the right of 16 moves away from her ideal.'}:near(v,12)?{hint:'12 is in the acceptance set, but is it what the legislature wants?'}:{hint:'Find the acceptance set first: 16 is 2 away from 14.'},
+   short:'Acceptance set 12 to 16. The legislature wants to move right, but the governor blocks it: <b>16</b>, nothing changes.',
+   long:'<p>A status quo <b>between</b> the two ideal points cannot be moved: <b>gridlock</b>.</p>'},
+  {type:'slider',min:0,max:20,init:10,slText:v=>`Status quo: <b>$${v}</b>`,ansText:'$8',
+   text:'What is the <b>highest status quo</b> at which the legislature gets its ideal point, <b>20</b>? '+MUTED('Move the slider and watch the outcome.'),
+   check:v=>v===8?{ok:1}:v<8?{hint:`At ${v} the legislature does get 20, but a higher status quo would also work.`}:v>=20?{hint:'At 20 nothing changes, but the question is about the highest status quo <i>below</i> the gridlock zone where the legislature can move policy to 20.'}:{hint:`At ${v} the outcome is ${out3(v)}, not 20.`},
+   onExplain:s=>{s.val=8;},
+   short:'At 8 the governor\'s acceptance set is 8 to 20 (both 6 away from 14). Above 8, 20 falls outside it.',
+   long:'<p>The worse the status quo is for the veto player, the more the agenda setter gets. Whoever sets the status quo before bargaining starts shapes the outcome.</p>'}
+ ],
+ vis:(stg,S)=>vis3(stg,S),
+ cap:(stg,S)=>{if(stg<4)return '';const q=S.steps[4].val,[a,b]=acc3(q);return `<p class="cap box">Status quo ${q}: governor signs ${a} to ${b} → outcome <b>${out3(q)}</b>${out3(q)===q&&q>G3&&q<L3?' (gridlock)':''}.</p>`;}},
+
+/* ---------- 4 ---------- */
+{lvl:4,sitTitle:'The situation',visTitle:'Should the firm gamble?',
+ defs:[['Asymmetric information','Each side knows things about itself that the other side does not.',''],
+   ['Expected payoff','The average payoff: (chance) × (payoff), added up over what can happen.','u'],
+   ['Costly signal','An action that would be expensive to fake, so the other side believes it.','e']],
+ sit:`<p>A ${aA('firm')} and a ${aB('union')} split a profit of <b>100</b>. The firm demands <i>x</i>; the union accepts or strikes. A strike gives the firm <b>0</b>.</p>
+  <p>The union is either <b>strong</b> (outside option 40) or <b>weak</b> (outside option 20). The union knows which; <b>the firm does not</b>.</p>
+  <p>The firm considers two offers: <b>generous</b> (demand 60) or <b>tough</b> (demand 80).</p>`,
+ steps:[
+  {type:'num',unit:'',text:'What is the largest demand a <b>strong</b> union accepts?',ansText:'60',
+   check:v=>near(v,60)?{ok:1}:near(v,40)?{hint:'40 is what the strong union must keep. It keeps 100 − x.'}:{hint:'Strong union accepts if 100 − x ≥ 40.'},
+   short:'<b>60</b>. So the generous offer is accepted by both types: the firm gets 60 for sure.',long:''},
+  {type:'num',unit:'',text:'What is the largest demand a <b>weak</b> union accepts?',ansText:'80',
+   check:v=>near(v,80)?{ok:1}:near(v,20)?{hint:'20 is what the weak union must keep.'}:{hint:'Weak union accepts if 100 − x ≥ 20.'},
+   short:'<b>80</b>. So the tough offer is accepted only by a weak union; a strong union strikes.',long:''},
+  {type:'num',unit:'',text:'The firm thinks each type is <b>equally likely</b> (50%). What is its expected payoff from the <b>tough</b> offer?',ansText:'40',
+   check:v=>near(v,40)?{ok:1}:near(v,80)?{hint:'80 only if the union is weak. Half the time it is strong and strikes (firm gets 0).'}:{hint:'0.5 × 80 + 0.5 × 0.'},
+   short:'0.5 × 80 + 0.5 × 0 = <b>40</b> &lt; 60: be generous.',long:''},
+  {type:'slider',min:0,max:100,init:50,slText:v=>`Belief that the union is weak: <b>${v}%</b>`,ansText:'75%',
+   text:'At what <b>belief</b> does the tough offer become at least as good as the generous one? '+MUTED('Move the slider.'),
+   check:p=>p===75?{ok:1}:p<75?{hint:`At ${p}%: tough gives 80 × ${p/100} = ${fmt(tough4(p))} &lt; 60.`}:{hint:'Tough is better here, but it already is at a lower belief.'},
+   onExplain:s=>{s.val=75;},
+   short:'80 × belief = 60 → belief = <b>75%</b>.',
+   long:'<p>Below 75%: be generous, no strike. Above 75%: make the tough offer and <b>accept the risk</b> of a strike.</p>'},
+  {type:'num',unit:'%',text:'The firm believes the union is weak with <b>90%</b> probability, so it makes the tough offer. What is the <b>chance of a strike</b>?',ansText:'10%',
+   check:v=>near(v,10)||near(v,.1)?{ok:1}:near(v,90)||near(v,.9)?{hint:'A strike happens only if the union is <b>strong</b>.'}:{hint:'The strong union strikes after a tough offer. How likely is it to be strong?'},
+   short:'<b>10%</b>: a strike happens only if the union turns out to be strong.',
+   long:'<p>A strike is not a mistake by irrational people: it is a <b>calculated risk</b> when one side does not know how strong the other is.</p>'},
+  {type:'radio',text:'The union wants the firm to believe it is <b>strong</b>. Which message would the firm believe most?',
+   opts:[R('v','98% of members vote for a strike, and the strike fund can pay wages for 3 months'),R('s','The union leader says on TV: "We will never accept less than 40!"'),R('e','A friendly email saying the union is very determined')],ans:'v',
+   hint:()=>'A weak union could easily say the same words. Which signal would be expensive for a weak union to fake?',
+   short:'The <b>strike vote and strike fund</b>: a costly signal. Words are cheap talk.',
+   long:'<p>Costly signals reveal information and can prevent strikes. Recall Boeing: workers rejected offers of 25% and 35% before accepting 38%. Each vote told Boeing more about what the union would accept.</p>'}
+ ],
+ vis:(stg,S)=>vis4(stg,S),
+ cap:(stg,S)=>{if(stg<3)return '';const p=S.steps[3].val,t=tough4(p);return `<p class="cap box">Belief ${p}%: tough = <b>${fmt(t)}</b> vs generous = <b>60</b> → <b style="color:${t>=60?'var(--red)':'var(--green)'}">${t>=60?'tough offer (strike risk '+(100-p)+'%)':'generous offer, no strike'}</b>.</p>`;}},
+
+/* ---------- 5 ---------- */
+{lvl:5,sitTitle:'The case: 2013 teachers\' lockout',visTitle:'Who controls teachers\' time?',
+ defs:[['Lockout','The employer stops workers from working (and pays no wages) to pressure the union.',''],
+   ['Bargaining in the shadow of the law','If talks fail, a third player (the government) decides. That sets the outside options.','u'],
+   ['Asymmetric information','Each side knows things the other does not, e.g. what the government will do.','e']],
+ sit:`<p>In 2013, ${aA('KL')} (the employers) wanted principals to decide how teachers use their hours; ${aB('DLF')} (the teachers\' union) wanted national rules. Scale: <b>0</b> = strict national rules (DLF\'s ideal) … <b>10</b> = the principal decides everything (KL\'s ideal). Old rules: <b>2</b>.</p>
+  <ul><li>KL proposes new rules; DLF accepts or rejects.</li><li>If DLF rejects: <b>lockout</b>. Then the government either passes a <b>law at 8</b>, or stays out and the <b>old rules (2)</b> stay.</li>
+  <li>A lockout is costly: it hurts each side as much as moving the rules <b>1 step</b> further from its ideal.</li></ul>
+  <p class="small">Illustrative numbers. Each side likes rules closer to its ideal.</p>`,
+ steps:[
+  {type:'num',unit:'',text:'Suppose <b>everyone knows</b> the government will pass the law at 8. For DLF, rejecting means a lockout, then the law. That is as bad for DLF as which point on the scale?',ansText:'9',
+   check:v=>near(v,9)?{ok:1}:near(v,8)?{hint:'Don\'t forget the cost of the lockout: 1 more step away from DLF\'s ideal (0).'}:near(v,7)?{hint:'The cost moves DLF <i>away</i> from its ideal at 0, so to the right.'}:{hint:'Law at 8, plus 1 step for the lockout cost.'},
+   short:'Law at 8 + lockout cost of 1 step = <b>9</b>. DLF accepts any offer from 0 to 9.',long:''},
+  {type:'num',unit:'',text:'What does KL <b>propose</b>?',ansText:'9',
+   check:v=>near(v,9)?{ok:1}:near(v,8)?{hint:'DLF would also accept something closer to KL\'s ideal, because the lockout is costly for DLF.'}:near(v,10)?{hint:'10 is outside DLF\'s acceptance set: DLF would reject.'}:{hint:'The point in DLF\'s acceptance set closest to KL\'s ideal (10).'},
+   short:'<b>9</b>: the edge of DLF\'s acceptance set. No lockout, and KL gets even more than the law would give it!',
+   long:'<p>Because the lockout is costly, DLF accepts terms slightly worse than the law. Outside options are set by a third party: KL bargains "in the shadow of" a law it expects to like.</p>'},
+  {type:'num',unit:'',text:'Now DLF is <b>not sure</b>: it thinks the government steps in with probability <b>0.5</b>; otherwise the old rules (2) stay. What is the <b>highest offer</b> DLF accepts?',ansText:'6',
+   check:v=>near(v,6)?{ok:1}:near(v,5)?{hint:'5 is the expected rules after a lockout. Add the lockout cost.'}:near(v,9)?{hint:'That was when DLF was sure about the law. Now it might get the old rules (2).'}:{hint:'Expected rules after a lockout: 0.5 × 8 + 0.5 × 2. Then add the lockout cost of 1.'},
+   short:'0.5 × 8 + 0.5 × 2 = 5, plus the cost of 1 = <b>6</b>. DLF accepts offers from 0 to 6.',long:''},
+  {type:'radio',text:'KL <b>knows</b> the government will pass the law at 8. Should KL offer 6, or lock the teachers out?',
+   opts:[R('o6','Offer 6: a deal is always better than a costly lockout'),R('lo','Lock out: the law at 8, minus the lockout cost, is as good for KL as 7'),R('o9','Offer 9: DLF accepts it as before')],ans:'lo',
+   hint:id=>id==='o9'?'DLF now accepts only offers up to 6.':'Compare for KL (ideal 10): a deal at 6 (4 steps away) vs a lockout and then the law at 8 (2 steps + 1 for the cost = 3 steps away).',
+   short:'<b>Lock out</b>: for KL a lockout is like 7 (8 minus 1 for the cost), better than a deal at 6.',
+   long:'<p>Here the lockout is <b>not</b> a mistake: KL knows something DLF does not (what the government will do), and DLF\'s optimism makes the deal range disappear. This is <b>asymmetric information</b>.</p>'},
+  {type:'slider',min:0,max:1,step:.01,init:.5,slText:v=>`DLF's belief that the government steps in: <b>${v.toFixed(2)}</b>`,ansText:'0.67 (exactly 2/3)',
+   text:'What is the <b>smallest belief</b> DLF must hold for KL to prefer a deal over a lockout? '+MUTED('Move the slider (2 decimals).'),
+   check:q=>near(q,.67)?{ok:1}:q<.67?{hint:`At ${q.toFixed(2)}, DLF accepts up to ${fmt(thr5(q))}: still below KL's lockout value of 7.`}:{hint:'A deal happens here, but it already does at a lower belief.'},
+   onExplain:s=>{s.val=.67;},
+   short:'DLF\'s limit is 3 + 6 × belief. It reaches 7 when belief = 4/6 = <b>2/3 ≈ 0.67</b>.',
+   long:'<p>Limit = belief × 8 + (1 − belief) × 2 + 1 = 3 + 6 × belief. KL offers a deal if 3 + 6 × belief ≥ 7. So the <b>more realistic</b> DLF is about the government, the more likely a peaceful deal. Conflict comes from <b>different beliefs</b>, not from irrationality.</p>'},
+  {type:'radio',text:'Using this model, what is the best explanation of the real 2013 lockout?',
+   opts:[R('inf','DLF underestimated how likely the government was to side with KL'),R('irr','The teachers were irrational'),R('kl','KL did not know what the teachers wanted'),R('ind','The issue could not be divided')],ans:'inf',
+   hint:id=>({irr:'In the model everyone is rational, yet a lockout can still happen. Why?',kl:'In our model KL knows DLF\'s ideal point. What did KL know that DLF did not?',ind:'The scale from 0 to 10 has many possible compromises.'})[id],
+   short:'<b>Asymmetric information</b>: DLF was too optimistic about what the government would do.',
+   long:'<p>Other explanations still matter: accepting terms dictated by the employer breaks the <b>fairness norms</b> of the Danish model, and the state\'s role raises a <b>commitment problem</b>: can the government credibly promise to stay out of bargaining when it pays for, and wants, a school reform?</p>'}
+ ],
+ vis:(stg,S)=>vis5(stg,S),
+ cap:(stg,S)=>{const k=Math.min(stg,5),q=k<=1?1:k<=3?.5:S.steps[4].val;
+   return `<p class="cap box">DLF's belief that the government passes the law: <b>${q===1?'certain':q.toFixed(2)}</b> → DLF accepts up to <b>${fmt(thr5(q))}</b>.</p>`;}}
+];
+
+/* ================= state ================= */
+let cur=0;
+const S=[];
+const initVal=q=>q.type==='slider'?q.init:q.type==='num'?'':q.type==='match'?q.items.map(()=>null):[];
+const st=i=>S[i]||(S[i]={scratch:new Set(),steps:EX[i].steps.map(q=>({status:'open',val:initVal(q),more:false,hint:'',extra:''}))});
+const done=s=>s.status==='correct'||s.status==='explained';
+function stage(i){let n=0;for(const s of st(i).steps){if(done(s))n++;else break;}return n;}
+
+/* ================= rendering ================= */
+function renderStatic(){
+  const ex=EX[cur];
+  $('#defs').innerHTML=ex.defs.map(([h,p,c])=>`<div class="card ${c}"><h3>${h}</h3><p>${p}</p></div>`).join('');
+  $('#sit').innerHTML=ex.sit;$('#sitTitle').textContent=ex.sitTitle;$('#visTitle').textContent=ex.visTitle;
+}
+function renderVis(){
+  const ex=EX[cur],stg=stage(cur),state=st(cur);
+  $('#vis').innerHTML=ex.vis(stg,state);
+  $('#legend').innerHTML=ex.legend?ex.legend(stg):'';
+  $('#viscap').innerHTML=ex.cap?ex.cap(stg,state):'';
+}
+function ansLabel(q){
+  if(q.ansText)return `<b>${q.ansText}</b>`;
+  return J([].concat(q.ans).map(id=>'<b>'+q.opts.find(o=>o.id===id).label+'</b>'));
+}
+function isEmpty(q,s){return q.type==='slider'?false:q.type==='num'?!String(s.val).trim():q.type==='match'?s.val.some(v=>v==null):!s.val.length;}
+function renderQs(){
+  const ex=EX[cur],state=st(cur);let h='';
+  state.steps.forEach((s,k)=>{
+    const q=ex.steps[k],visible=k===0||done(state.steps[k-1]),fin=done(s),lock=fin||s.status==='wrong';
+    let body='';
+    if(q.type==='radio'||q.type==='check'){
+      const ans=new Set([].concat(q.ans)),sel=new Set(s.val);
+      body=`<div class="opts">`+q.opts.map(o=>{
+        let cls='opt'+(lock?' dis':'');
+        if(fin){if(ans.has(o.id))cls+=' right';else if(sel.has(o.id))cls+=' miss';}
+        else if(s.status==='wrong'&&sel.has(o.id)&&q.type==='radio')cls+=' miss';
+        return `<label class="${cls}"><input type="${q.type==='radio'?'radio':'checkbox'}" name="q${cur}_${k}" value="${o.id}" ${sel.has(o.id)?'checked':''} ${lock?'disabled':''}><span>${o.label}</span></label>`;
+      }).join('')+'</div>';
+    }
+    if(q.type==='match'){
+      body='<div class="match">'+q.items.map((it,i)=>{
+        let cls='mrow';if(fin||s.status==='wrong')cls+=s.val[i]===it.ans?(fin?' right':''):' miss';
+        return `<div class="${cls}"><span>${it.label}</span><div class="pills">${q.cats.map(c=>`<label class="pill ${s.val[i]===c?'on':''} ${lock?'dis':''}"><input type="radio" name="m${cur}_${k}_${i}" value="${c}" data-mi="${i}" ${lock?'disabled':''}>${c}</label>`).join('')}</div></div>`;
+      }).join('')+'</div>';
+    }
+    if(q.type==='num'){
+      const v=s.status==='explained'?q.ansText.split(' ')[0]:s.val;
+      body=`<div class="numrow"><input type="text" inputmode="decimal" autocomplete="off" placeholder="type a number" value="${String(v).replace(/"/g,'')}" ${lock?'disabled':''} data-num="${k}"><span>${q.unit}</span></div>`;
+    }
+    if(q.type==='slider'){
+      body=`<div class="slrow"><input type="range" min="${q.min}" max="${q.max}" step="${q.step||1}" value="${s.val}" data-sl="${k}" ${lock?'disabled':''}><span class="val" id="slv${k}">${q.slText(s.val)}</span></div>`;
+    }
+    let act='',fb='';
+    if(s.status==='open')act=`<button class="p" data-act="check" ${isEmpty(q,s)?'disabled':''}>Check answer</button>`;
+    if(s.status==='wrong')fb=`<div class="fb bad"><b>Not quite.</b> ${s.hint||''}${s.extra||''}<div class="row"><button class="p" data-act="again">Try again</button><button class="s" data-act="explain">Explain</button></div></div>`;
+    if(s.status==='correct')fb=`<div class="fb ok"><b>Correct!</b> ${q.short} ${q.long?(s.more?`<div style="margin-top:6px">${q.long}</div>`:`<button class="lnk" data-act="more">Show detailed explanation</button>`):''}</div>`;
+    if(s.status==='explained')fb=`<div class="fb info"><b>Explanation.</b> ${q.type==='match'?'':`The correct answer: ${ansLabel(q)}. `}${q.type==='match'?'':q.short}${q.long}</div>`;
+    h+=`<div class="step ${visible?'':'locked'}" data-k="${k}"><div class="qhead"><span class="qnum">${k+1}</span><span>${q.text}</span></div>${body}${act}${fb}</div>`;
+  });
+  $('#qs').innerHTML=h;
+}
+
+/* ================= events ================= */
+$('#qs').addEventListener('change',e=>{
+  const t=e.target;if(t.type!=='checkbox'&&t.type!=='radio')return;
+  const stepEl=t.closest('.step'),k=+stepEl.dataset.k,s=st(cur).steps[k],q=EX[cur].steps[k];
+  if(t.dataset.mi!==undefined){
+    s.val[+t.dataset.mi]=t.value;
+    t.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.querySelector('input').value===t.value));
+  } else if(t.type==='radio')s.val=[t.value];
+  else{
+    let sel=new Set(s.val);
+    if(t.value==='none')t.checked?sel=new Set(['none']):sel.delete('none');
+    else{t.checked?(sel.add(t.value),sel.delete('none')):sel.delete(t.value);}
+    s.val=[...sel];
+    stepEl.querySelectorAll('input').forEach(i=>i.checked=sel.has(i.value));
+  }
+  const b=stepEl.querySelector('[data-act=check]');if(b)b.disabled=isEmpty(q,s);
+});
+$('#qs').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.num!==undefined){const s=st(cur).steps[+t.dataset.num];s.val=t.value;
+    const b=t.closest('.step').querySelector('[data-act=check]');if(b)b.disabled=!t.value.trim();}
+  if(t.dataset.sl!==undefined){const k=+t.dataset.sl,s=st(cur).steps[k];s.val=+t.value;
+    $('#slv'+k).innerHTML=EX[cur].steps[k].slText(s.val);renderVis();}
+});
+$('#qs').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.dataset.num!==undefined){const b=e.target.closest('.step').querySelector('[data-act=check]');if(b&&!b.disabled)b.click();}
+});
+$('#qs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const k=+b.closest('.step').dataset.k,s=st(cur).steps[k],q=EX[cur].steps[k],act=b.dataset.act;
+  if(act==='check'){
+    s.hint='';s.extra='';
+    if(q.type==='num'||q.type==='slider'){
+      const v=q.type==='num'?parseNum(s.val):s.val;
+      if(isNaN(v)){s.status='wrong';s.hint='Please type a number.';}
+      else{const r=q.check(v);s.status=r.ok?'correct':'wrong';s.hint=r.hint||'';}
+    } else if(q.type==='radio'){
+      const id=s.val[0];s.status=id===q.ans?'correct':'wrong';
+      if(s.status==='wrong'){s.hint=q.hint?q.hint(id)||'':'';s.extra=q.extra?q.extra(id):'';}
+    } else if(q.type==='match'){
+      const wrong=q.items.map((it,i)=>s.val[i]===it.ans?null:i).filter(i=>i!==null);
+      s.status=wrong.length?'wrong':'correct';
+      if(wrong.length)s.hint=`${q.items.length-wrong.length} of ${q.items.length} right. Look again at the red ${wrong.length>1?'rows':'row'}.`;
+    } else {
+      const a=new Set(q.ans),g=new Set(s.val);
+      s.status=(a.size===g.size&&[...a].every(x=>g.has(x)))?'correct':'wrong';
+      if(s.status==='wrong')s.hint=q.hint?q.hint(s.val):'';
+    }
+  }
+  if(act==='again'){s.status='open';if(q.type==='num')s.val='';else if(q.type!=='slider')s.val=initVal(q);}
+  if(act==='explain'){s.status='explained';if(q.onExplain)q.onExplain(s);if(q.type==='match')s.val=q.items.map(it=>it.ans);}
+  if(act==='more')s.more=true;
+  refresh();
+  if(act==='again'){const inp=document.querySelector(`.step[data-k="${k}"] input[data-num]`);if(inp)inp.focus();}
+});
+$('#vis').addEventListener('click',e=>{
+  const t=e.target.closest('span.clk');if(!t)return;
+  const sc=st(cur).scratch,k=t.dataset.k;sc.has(k)?sc.delete(k):sc.add(k);renderVis();
+});
+$('#viscap').addEventListener('click',e=>{if(e.target.closest('[data-act=clear]')){st(cur).scratch.clear();renderVis();}});
+
+/* ================= navigation ================= */
+function refresh(){
+  renderVis();renderQs();updateDots();
+  $('#hint').textContent=stage(cur)===EX[cur].steps.length?'All questions done. Continue when ready.':'';
+}
+function updateDots(){
+  document.querySelectorAll('#dots button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',stage(i)===EX[i].steps.length);});
+  $('#meta').innerHTML=`Exercise ${cur+1} of ${EX.length} &nbsp;·&nbsp; Difficulty <span class="lvl">${'●'.repeat(EX[cur].lvl)}${'○'.repeat(5-EX[cur].lvl)}</span>`;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===EX.length-1;
+  $('#prev').style.opacity=cur===0?.4:1;$('#next').style.opacity=cur===EX.length-1?.4:1;
+}
+function go(i,scroll=true){
+  cur=Math.max(0,Math.min(EX.length-1,i));
+  history.replaceState(null,'','#ex'+(cur+1));
+  renderStatic();refresh();
+  if(scroll)window.scrollTo({top:document.querySelector('.topbar').offsetTop-10,behavior:'smooth'});
+}
+$('#dots').innerHTML=EX.map((e,i)=>`<button aria-label="Exercise ${i+1}">${i+1}</button>`).join('');
+$('#dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go([...$('#dots').children].indexOf(b));});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+(function init(){const m=/ex(\d+)/.exec(location.hash);go(m?+m[1]-1:0,false);})();
+</script>
+</body></html>
