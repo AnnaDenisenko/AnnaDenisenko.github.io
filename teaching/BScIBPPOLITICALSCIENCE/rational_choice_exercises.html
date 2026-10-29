@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive exercises: incentives &amp; Nash equilibrium</title>
+<style>
+:root{
+  --bg:#f7f6f3; --card:#fff; --ink:#1f2330; --muted:#6a6f7d; --line:#e3e1dc;
+  --purple:#6b3fa0; --purple-l:rgba(107,63,160,.14); --orange:#d9822b; --green:#2e8b57;
+  --red:#c0392b; --blue:#3b6fb6; --colA:#00823c; --colB:#d26e00;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 60px}
+a.course{display:inline-block;font-size:.9rem;color:var(--purple);text-decoration:none;margin-bottom:4px}
+a.course:hover{text-decoration:underline}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:1.7rem;margin:.2em 0 .1em}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.defs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.defs .card h3{margin:0 0 4px;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.defs .card p{margin:0;font-size:.95rem}
+.defs .card.u h3{color:var(--orange)}
+.defs .card.e h3{color:var(--green)}
+.topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dots{display:flex;flex-wrap:wrap;gap:6px}
+.dots button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:.85rem;color:var(--ink)}
+.dots button.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.dots button.done:not(.on){background:#e9f5ee;border-color:#9fd2b5}
+.meta{color:var(--muted);font-size:.9rem}
+.lvl{letter-spacing:2px;color:var(--purple)}
+.blocks{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"sit vis" "quest vis";grid-template-rows:auto 1fr;gap:14px}
+.b-sit{grid-area:sit}.b-vis{grid-area:vis;align-self:start;position:sticky;top:12px}.b-quest{grid-area:quest}
+.blocks h2{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+@media(max-width:860px){
+  .defs{grid-template-columns:1fr}
+  .blocks{grid-template-columns:1fr;grid-template-areas:"sit" "vis" "quest"}
+  .b-vis{position:static}
+}
+.b-sit p{margin:.3em 0}
+.b-sit ul,.b-sit ol{margin:.3em 0 .3em 1.2em;padding:0}
+.b-sit li{margin:.15em 0}
+.facts{list-style:none;margin:8px 0!important;padding:0!important}
+.facts li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding:4px 0}
+.facts li b{font-variant-numeric:tabular-nums}
+.ranks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
+.ranks h4{margin:0 0 4px;font-size:.9rem}
+.ranks ol{margin:0 0 0 1.2em;padding:0;font-size:.95rem}
+.small{font-size:.88rem;color:var(--muted)}
+.va{color:var(--colA)}.vb{color:var(--colB)}
+/* chart */
+#vis svg{width:100%;height:auto;display:block;max-width:480px;margin:0 auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:10px;justify-content:center}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg i{display:inline-block;width:12px;height:12px;border-radius:50%}
+.lg i.ln{width:20px;height:0;border-radius:0;border-top:3px solid var(--purple)}
+.lg i.dsh{width:20px;height:0;border-radius:0;border-top:3px dashed #888}
+.lg i.sq{border-radius:3px}
+.cap{font-size:.92rem;text-align:center;margin:10px auto 0;max-width:440px}
+.cap.box{background:#f3f0f9;border-radius:8px;padding:8px 10px}
+/* matrix */
+.mx{border-collapse:collapse;margin:6px auto;font-size:1.1rem}
+.mx td.c{border:1.5px solid #333;width:96px;height:60px;text-align:center;font-variant-numeric:tabular-nums;transition:background .3s}
+.mx.m3 td.c{width:80px;height:54px;font-size:1rem}
+.mx th{font-weight:600;font-size:.95rem;transition:opacity .3s}
+.mx th.col{padding:4px 6px;color:var(--colB)}
+.mx th.row{padding:4px 10px;text-align:right;color:var(--colA)}
+.mx th.g{opacity:.3}
+.mx .plb{color:var(--colB);font-weight:700;text-align:center;padding-bottom:2px;font-size:.95rem}
+.mx .pla{color:var(--colA);font-weight:700;font-size:.95rem;padding-right:4px}
+.mx .pla span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block}
+.mx span.q{color:#c9c9c9}
+.mx .cm{color:#999}
+.mx span.u{color:var(--red)!important;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:700}
+.mx td.c.gray{background:#f2f2f2}
+.mx td.c.gray span{color:#cfcfcf!important}
+.mx span.dim{color:#cfcfcf!important}
+.mx span.u.dim{text-decoration-color:#e7b3ad}
+.mx td.c.ne{background:var(--purple-l);box-shadow:inset 0 0 0 2px var(--purple)}
+.mx span.clk{cursor:pointer;padding:1px 5px;border-radius:4px}
+.mx span.clk:hover{background:#f6e5e3}
+/* questions */
+.step{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:#fff}
+.step.locked{display:none}
+.qhead{display:flex;gap:10px;margin-bottom:10px;font-weight:600}
+.qnum{flex:none;width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:.8rem;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.muted{font-weight:400;color:var(--muted)}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.opts.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.opts.g3 .opt.full{grid-column:1/-1}
+@media(max-width:520px){.opts.g3{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;background:#fcfcfb}
+.opt:hover{border-color:#b9a9d6}
+.opt input{accent-color:var(--purple)}
+.opt.right{border-color:var(--green);background:#eaf6ef}
+.opt.miss{border-color:var(--red);background:#fbeceb}
+.opt.dis{cursor:default}
+.numrow{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.numrow input{font:inherit;width:110px;padding:6px 10px;border:1px solid #cfc8dc;border-radius:8px}
+.numrow input:focus{outline:2px solid var(--purple-l);border-color:var(--purple)}
+.numrow input:disabled{background:#f4f4f2;color:var(--ink)}
+.slrow{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.slrow input[type=range]{flex:1;min-width:160px;accent-color:var(--purple)}
+.slrow .val{min-width:170px;font-variant-numeric:tabular-nums}
+button.p{font:inherit;background:var(--purple);color:#fff;border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
+button.p:disabled{opacity:.4;cursor:not-allowed}
+button.s{font:inherit;background:#fff;color:var(--purple);border:1px solid var(--purple);border-radius:8px;padding:6px 14px;cursor:pointer}
+button.s.sm{font-size:.82rem;padding:3px 10px}
+button.lnk{font:inherit;background:none;border:0;color:var(--purple);text-decoration:underline;cursor:pointer;padding:0}
+.fb{margin-top:10px;border-radius:8px;padding:10px 12px;font-size:.95rem}
+.fb.ok{background:#eaf6ef;border-left:4px solid var(--green)}
+.fb.bad{background:#fbeceb;border-left:4px solid var(--red)}
+.fb.info{background:#f3f0f9;border-left:4px solid var(--purple)}
+.fb ul{margin:.4em 0 .4em 1.1em;padding:0}
+.fb li{margin:.25em 0}
+.fb p{margin:.5em 0}
+.fb .row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.defn{background:#fff;border:1px solid #d6c8ea;border-left:4px solid var(--purple);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:.93rem}
+.defn b.t{color:var(--purple)}
+.pop{animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;align-items:center}
+.nav .hint{color:var(--muted);font-size:.9rem;text-align:center;flex:1}
+footer{margin-top:30px;color:var(--muted);font-size:.8rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="course" href="/teaching/BScIBPPOLITICALSCIENCE/">← Copenhagen Business School: BSc IBP POLITICAL SCIENCE</a>
+  <h1>Incentives &amp; Nash equilibrium</h1>
+  <p class="sub">Practice exercises for Lecture 2 (Interests and Rational Choice). No grades; move on whenever you like.</p>
+
+  <div class="defs" id="defs"></div>
+
+  <div class="topbar">
+    <div class="dots" id="dots"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="blocks">
+    <section class="card b-sit"><h2 id="sitTitle">The situation</h2><div id="sit"></div></section>
+    <section class="card b-vis"><h2 id="visTitle">Picture</h2><div id="vis"></div><div id="legend" class="legend"></div><div id="viscap"></div></section>
+    <section class="b-quest"><div id="qs"></div></section>
+  </div>
+
+  <div class="nav">
+    <button class="s" id="prev">← Previous</button>
+    <div class="hint" id="hint"></div>
+    <button class="p" id="next">Next exercise →</button>
+  </div>
+</div>
+
+<script>
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const J=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const fmt=n=>String(+(+n).toFixed(2));
+const near=(a,b)=>Math.abs(a-b)<1e-3;
+const MUTED=t=>`<span class="muted">${t}</span>`;
+const aA=t=>`<span class="va">${t}</span>`, aB=t=>`<span class="vb">${t}</span>`;
+function parseNum(s){
+  if(s==null)return NaN;
+  s=String(s).toLowerCase().replace(/dkk|kr\.?|million|mio|mil/g,'').replace(/\s+/g,'').replace(',','.');
+  let pct=false; if(s.endsWith('%')){pct=true;s=s.slice(0,-1);}
+  let v=NaN, m;
+  if((m=s.match(/^(\d*\.?\d+)\/(\d*\.?\d+)$/)))v=+m[1]/+m[2];
+  else if((m=s.match(/^(\d+)in(\d+)$/)))v=+m[1]/+m[2];
+  else if(/^-?\d*\.?\d+$/.test(s))v=+s;
+  return pct?v/100:v;
+}
+
+/* ================= games ================= */
+const PD={a:'Ann',b:'Bob',pa:'Ann',pb:'Bob',rows:['Stay silent','Snitch'],cols:['Stay silent','Snitch'],pay:[[[3,3],[1,4]],[[4,1],[2,2]]]};
+const G4={a:'A',b:'B',pa:'Person A',pb:'Person B',rows:['Up','Down'],cols:['Left','Right'],pay:[[[3,2],[0,0]],[[1,1],[2,3]]]};
+const G5={a:'A',b:'B',pa:'Person A',pb:'Person B',rows:['Up','Middle','Down'],cols:['Left','Center','Right'],
+          pay:[[[4,3],[1,1],[2,0]],[[2,1],[3,4],[0,2]],[[1,0],[2,4],[3,3]]]};
+function analyze(g){
+  const R=g.rows.length,C=g.cols.length,brA=[],brB=[],ul=new Set(),ne=[];
+  for(let c=0;c<C;c++){const m=Math.max(...g.pay.map(row=>row[c][0]));brA[c]=[];
+    for(let r=0;r<R;r++)if(g.pay[r][c][0]===m){brA[c].push(r);ul.add(`${r},${c},0`);}}
+  for(let r=0;r<R;r++){const m=Math.max(...g.pay[r].map(x=>x[1]));brB[r]=[];
+    for(let c=0;c<C;c++)if(g.pay[r][c][1]===m){brB[r].push(c);ul.add(`${r},${c},1`);}}
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++)if(ul.has(`${r},${c},0`)&&ul.has(`${r},${c},1`))ne.push(`${r},${c}`);
+  return {brA,brB,ul,ne};
+}
+const G6={a:'A',b:'B',pa:'Person A',pb:'Person B',rows:['Up','Down'],cols:['Left','Right'],pay:[[[2,1],[1,2]],[[1,2],[2,1]]]};
+[PD,G4,G5,G6].forEach(g=>g.an=analyze(g));
+const P=(g,r,c)=>`(${aA(g.rows[r])}, ${aB(g.cols[c])})`;
+const PK=(g,k)=>{const [r,c]=k.split(',').map(Number);return P(g,r,c);};
+const pv=(g,r,c)=>`(${g.pay[r][c][0]}, ${g.pay[r][c][1]})`;
+function devs(g,r,c){
+  const an=g.an,out=[];
+  if(!an.brA[c].includes(r)){const b=an.brA[c][0];out.push(`${g.a} would switch to <b>${g.rows[b]}</b> (${g.pay[b][c][0]} &gt; ${g.pay[r][c][0]})`);}
+  if(!an.brB[r].includes(c)){const b=an.brB[r][0];out.push(`${g.b} would switch to <b>${g.cols[b]}</b> (${g.pay[r][b][1]} &gt; ${g.pay[r][c][1]})`);}
+  return out;
+}
+function brList(g){
+  let h='<p><b>A\'s best responses</b> (compare the <b>first</b> numbers down each column):</p><ul>';
+  g.cols.forEach((n,c)=>{const b=g.an.brA[c][0];
+    h+=`<li>If B plays ${aB(n)}: ${g.rows.map((rn,r)=>`${rn} → ${g.pay[r][c][0]}`).join(', ')}. Best: <b>${aA(g.rows[b])}</b></li>`;});
+  h+='</ul><p><b>B\'s best responses</b> (compare the <b>second</b> numbers along each row):</p><ul>';
+  g.rows.forEach((n,r)=>{const b=g.an.brB[r][0];
+    h+=`<li>If A plays ${aA(n)}: ${g.cols.map((cn,c)=>`${cn} → ${g.pay[r][c][1]}`).join(', ')}. Best: <b>${aB(g.cols[b])}</b></li>`;});
+  return h+'</ul>';
+}
+const neCells=g=>J(g.an.ne.map(k=>PK(g,k)));
+function matrix(g,o={}){
+  const R=g.rows.length,C=g.cols.length,show=o.show||(()=>true),ul=o.ul||new Set(),hl=o.hl||new Set();
+  let h=`<table class="mx ${C>2?'m3':''}"><tr><td></td><td></td><td colspan="${C}" class="plb">${g.pb}</td></tr>`;
+  h+=`<tr><td></td><td></td>${g.cols.map((n,c)=>`<th class="col ${o.grayCol===c?'g':''}">${n}</th>`).join('')}</tr>`;
+  for(let r=0;r<R;r++){
+    h+=`<tr>${r===0?`<td rowspan="${R}" class="pla"><span>${g.pa}</span></td>`:''}<th class="row ${o.grayRow===r?'g':''}">${g.rows[r]}</th>`;
+    for(let c=0;c<C;c++){
+      const gray=o.grayRow===r||o.grayCol===c;
+      const v=p=>{
+        if(!show(r,c,p))return '<span class="q">?</span>';
+        const k=`${r},${c},${p}`;let cls=p?'vb':'va';
+        if(ul.has(k))cls+=' u'; if(o.grayP===p)cls+=' dim'; if(o.click)cls+=' clk';
+        return `<span class="${cls}" data-k="${k}">${g.pay[r][c][p]}</span>`;
+      };
+      h+=`<td class="c ${gray?'gray':''} ${hl.has(`${r},${c}`)?'ne':''}">${v(0)}<span class="cm">,</span> ${v(1)}</td>`;
+    }
+    h+='</tr>';
+  }
+  return h+'</table>';
+}
+const READF=(a,b)=>`<p class="cap small">${a} chooses a <b>row</b>; ${b} chooses a <b>column</b>. First number = ${aA(a)}'s payoff, second = ${aB(b)}'s. Higher = better.</p>`;
+const READ=READF('A','B'), READP=READF('Ann','Bob');
+
+/* ---- definition snippets ---- */
+const DEF_SP='<div class="defn pop"><b class="t">Strategy profile</b>: one strategy for <i>each</i> person, written (Ann\'s action, Bob\'s action). An <b>action</b> is what <i>one</i> person does, e.g. Snitch.</div>';
+const DEF_NE='<div class="defn pop"><b class="t">Nash equilibrium</b>: a <b>strategy profile</b> where <i>every</i> actor is playing a <b>best response</b> ⇒ no one wants to change their choice on their own. Write it as (Ann\'s action, Bob\'s action), e.g. (Stay silent, Snitch), not as payoffs.</div>';
+const NOTACT=(prof,who,acts)=>`<b>Not an action!</b> ${prof} is a <b>strategy profile</b>: one strategy for each person. A best response is one of ${who}'s own actions: ${acts}.`;
+const RECIPE='<p><b>Recipe</b> from class:</p><ol><li>For <b>each</b> action of the other person, find the best response and underline that payoff.</li><li>Cells where <b>all</b> payoffs are underlined are the Nash equilibria.</li></ol>';
+
+/* ================= exercise 1: firm compliance ================= */
+const GAIN=2, FINE=8, PROB=.1;
+function plotFirm(stg,F){
+  const W=440,H=330,m={l:50,r:18,t:16,b:46},X=.4,Y=4;
+  const sx=p=>m.l+p/X*(W-m.l-m.r), sy=y=>H-m.b-y/Y*(H-m.t-m.b);
+  const pt=(p,y)=>`${sx(p).toFixed(1)},${sy(y).toFixed(1)}`;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Expected fine and profit from cheating"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#333"/></marker><marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b3fa0"/></marker></defs>`;
+  for(let i=0;i<=4;i++){const p=i/10;
+    s+=`<line x1="${sx(p)}" y1="${sy(0)}" x2="${sx(p)}" y2="${sy(Y)}" stroke="#eee"/><line x1="${sx(p)}" y1="${sy(0)-4}" x2="${sx(p)}" y2="${sy(0)+4}" stroke="#333"/><text x="${sx(p)}" y="${sy(0)+17}" font-size="11" text-anchor="middle" fill="#555">${fmt(p)}</text>`;}
+  for(let y=0;y<=Y;y++){
+    s+=`<line x1="${sx(0)}" y1="${sy(y)}" x2="${sx(X)}" y2="${sy(y)}" stroke="#eee"/><line x1="${sx(0)-4}" y1="${sy(y)}" x2="${sx(0)+4}" y2="${sy(y)}" stroke="#333"/><text x="${sx(0)-9}" y="${sy(y)+4}" font-size="11" text-anchor="end" fill="#555">${y}</text>`;}
+  s+=`<text x="${sx(X/2)}" y="${H-8}" font-size="12" text-anchor="middle" fill="#333">chance of being caught</text>`;
+  s+=`<text x="14" y="${sy(Y/2)}" font-size="12" text-anchor="middle" fill="#333" transform="rotate(-90 14 ${sy(Y/2)})">million DKK</text>`;
+  const Fc=stg>=3?F:FINE, pc=GAIN/Fc, pe=Math.min(pc,X);
+  const lineEnd=Fc*X<=Y?X:Y/Fc;
+  if(stg>=3){
+    s+=`<polygon points="${pt(0,0)} ${pt(0,GAIN)} ${pt(pe,GAIN)} ${pt(pe,Math.min(GAIN,Fc*pe))}" fill="#c0392b" fill-opacity=".13"/>`;
+    if(pe>.11)s+=`<text x="${sx(pe*.3)}" y="${sy(1.45)}" font-size="11" fill="#a33025" text-anchor="middle">cheating</text><text x="${sx(pe*.3)}" y="${sy(1.45)+13}" font-size="11" fill="#a33025" text-anchor="middle">pays</text>`;
+    if(pc<X){
+      const poly=Fc*X<=Y?`${pt(pc,GAIN)} ${pt(X,Fc*X)} ${pt(X,GAIN)}`:`${pt(pc,GAIN)} ${pt(Y/Fc,Y)} ${pt(X,Y)} ${pt(X,GAIN)}`;
+      s+=`<polygon points="${poly}" fill="#2e8b57" fill-opacity=".13"/>`;
+      if(Fc*(X-.04)>2.6)s+=`<text x="${sx(X)-6}" y="${sy(2.25)}" font-size="11" fill="#22704a" text-anchor="end">complying pays</text>`;
+    }
+  }
+  if(stg>=2){
+    s+=`<line x1="${sx(0)}" y1="${sy(GAIN)}" x2="${sx(X)}" y2="${sy(GAIN)}" stroke="#888" stroke-width="2.5" stroke-dasharray="7 5"/>`;
+    s+=`<text x="${sx(X)-4}" y="${sy(GAIN)+15}" font-size="11" fill="#555" text-anchor="end" paint-order="stroke" stroke="#fff" stroke-width="3">profit from cheating = ${GAIN}</text>`;
+  }
+  if(stg>=3){
+    if(Fc!==FINE)s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(X)}" y2="${sy(FINE*X)}" stroke="#6b3fa0" stroke-opacity=".3" stroke-width="2" stroke-dasharray="4 3"/>`;
+    s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(lineEnd)}" y2="${sy(Fc*lineEnd)}" stroke="#6b3fa0" stroke-width="3"/>`;
+    const lx=sx(lineEnd)-6, ly=sy(Fc*lineEnd)+(Fc*X<=Y?-8:14);
+    s+=`<text x="${lx}" y="${ly}" font-size="11" fill="#6b3fa0" text-anchor="end" paint-order="stroke" stroke="#fff" stroke-width="3">expected fine = ${Fc} × chance</text>`;
+    if(pc<=X){
+      s+=`<line x1="${sx(pc)}" y1="${sy(0)}" x2="${sx(pc)}" y2="${sy(GAIN)}" stroke="#6b3fa0" stroke-dasharray="2 3"/>`;
+      s+=`<circle cx="${sx(pc)}" cy="${sy(GAIN)}" r="4.5" fill="#fff" stroke="#6b3fa0" stroke-width="2"/>`;
+      s+=`<text x="${sx(pc)+4}" y="${sy(0)-6}" font-size="11" font-weight="600" fill="#6b3fa0">${fmt(pc)}</text>`;
+    }
+  }
+  if(stg>=1){
+    const yd=Math.min(Y,PROB*Fc);
+    s+=`<line x1="${sx(PROB)}" y1="${sy(0)}" x2="${sx(PROB)}" y2="${sy(yd)}" stroke="#222" stroke-dasharray="2 3"/>`;
+    if(stg>=3&&Fc!==FINE){
+      s+=`<circle cx="${sx(PROB)}" cy="${sy(PROB*FINE)}" r="4" fill="#fff" stroke="#999" stroke-width="1.5"/>`;
+      if(Math.abs(yd-PROB*FINE)>.35)s+=`<line x1="${sx(PROB)}" y1="${sy(PROB*FINE)+(yd>PROB*FINE?-6:6)}" x2="${sx(PROB)}" y2="${sy(yd)+(yd>PROB*FINE?9:-9)}" stroke="#6b3fa0" stroke-width="2" marker-end="url(#ar2)"/>`;
+    }
+    s+=`<circle cx="${sx(PROB)}" cy="${sy(yd)}" r="5.5" fill="#222"/>`;
+    s+=`<text x="${sx(PROB)+9}" y="${sy(yd)+16}" font-size="11" fill="#222" paint-order="stroke" stroke="#fff" stroke-width="3">today: expected fine ${fmt(PROB*Fc)}</text>`;
+  }
+  s+=`<line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(X)+8}" y2="${sy(0)}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/><line x1="${sx(0)}" y1="${sy(0)}" x2="${sx(0)}" y2="${sy(Y)-8}" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>`;
+  return s+'</svg>';
+}
+
+/* ================= exercise definitions ================= */
+const pf=(g,r,c)=>({id:`${r},${c}`,label:P(g,r,c)});
+const all4=g=>[pf(g,0,0),pf(g,0,1),pf(g,1,0),pf(g,1,1)];
+const allCells=g=>{const o=[];g.rows.forEach((_,r)=>g.cols.forEach((_,c)=>o.push(pf(g,r,c))));return o;};
+
+function neHint(g){
+  return sel=>{
+    if(sel.includes('none')&&g.an.ne.length)return 'There <i>is</i> at least one cell where both payoffs are underlined. Try the recipe on the left.';
+    const ans=g.an.ne, wrong=sel.filter(k=>k!=='none'&&!ans.includes(k)), miss=ans.filter(k=>!sel.includes(k));
+    let h='';
+    if(wrong.length)h+='<ul>'+wrong.map(k=>{const [r,c]=k.split(',').map(Number);return `<li>${P(g,r,c)} is not an equilibrium: ${J(devs(g,r,c))}.</li>`;}).join('')+'</ul>';
+    if(miss.length)h+=`<p>${wrong.length?'Also, you':'Everything you picked is right, but you'} are missing ${miss.length>1?'some equilibria':'one equilibrium'}.</p>`;
+    return h;
+  };
+}
+function gameVis(g,stg,scratch){
+  const done=stg>=1;
+  return matrix(g,{ul:done?g.an.ul:scratch,hl:done?new Set(g.an.ne):new Set(),click:!done});
+}
+function gameCap(stg){
+  return READ+(stg>=1?'<p class="cap">Red underlines = best responses. Purple cells = Nash equilibria.</p>'
+    :'<p class="cap box">Click a payoff to underline it, like on the slides. <button class="s sm" data-act="clear">Clear my underlines</button></p>');
+}
+
+const DEF_GAME=[
+  ['Strategy profile','One strategy for each person, written (row person\'s action, column person\'s action), e.g. (Snitch, Stay silent).',''],
+  ['Best response','Your best strategy, <i>given</i> what the others do.','u'],
+  ['Nash equilibrium','A strategy profile where everyone plays a best response: no one wants to change their choice on their own.','e']
+];
+
+const EX=[
+/* ---------- 1 ---------- */
+{lvl:1, sitTitle:'The situation', visTitle:'When does cheating pay?',
+ defs:[
+  ['Expected fine','The fine you pay <i>on average</i>: (chance of being caught) × (fine if caught).',''],
+  ['Profit from cheating','The extra money the firm makes by breaking the rule.','u'],
+  ['The firm complies if…','expected fine ≥ profit from cheating. Otherwise breaking the rule pays.','e']],
+ sit:`<p>Imaginary <b>Baltic Paper</b> has one goal: <b>profit</b>. A new rule says it must clean its wastewater. It can secretly break the rule:</p>
+  <ul class="facts"><li><span>Extra profit from breaking the rule</span><b>DKK ${GAIN} million</b></li><li><span>Fine if caught</span><b>DKK ${FINE} million</b></li><li><span>Chance of being caught</span><b>1 in 10 (= 0.1)</b></li></ul>
+  <p class="small">Type answers as decimals: 0.5 or 0,5 both work.</p>`,
+ steps:[
+  {type:'num',unit:'million DKK',text:'What is the firm\'s <b>expected fine</b> if it breaks the rule?',ansText:'0.8 million DKK',
+   check:v=>near(v,.8)?{ok:1}:near(v,8)?{hint:'DKK 8 million is the fine <i>if caught</i>. But the firm is caught only 1 time in 10.'}
+     :near(v,2)?{hint:'That is the profit from cheating. The expected fine depends on the fine and the chance of being caught.'}
+     :near(v,80)?{hint:'Careful: 1 in 10 is 0.1, not 10.'}:{hint:'Expected fine = (chance of being caught) × (fine if caught).'},
+   short:'Expected fine = 0.1 × 8 = <b>0.8</b> million DKK (the black dot).',
+   long:'<p>The firm pays only if it is caught. Imagine 10 firms like this one all cheat: on average 1 is caught and pays 8 million. Spread over the 10 firms, that is 8 ÷ 10 = 0.8 million each.</p><p>In general: <b>expected fine = chance of being caught × fine if caught</b>.</p>'},
+  {type:'num',unit:'million DKK',text:'How much <b>extra profit</b> does the firm expect if it cheats? '+MUTED('(Before any fine.)'),ansText:'2 million DKK',
+   check:v=>near(v,2)?{ok:1}:near(v,1.2)?{hint:'1.2 is the profit <i>after</i> subtracting the expected fine. We want the extra profit from cheating itself.'}
+     :near(v,.8)?{hint:'That is the expected fine from the previous question.'}:{hint:'Look at the list on the left: how much extra money does breaking the rule bring?'},
+   short:'The firm gains <b>2</b> million DKK by cheating (the dashed line).',
+   long:'<p>Now compare: gain <b>2</b> &gt; expected fine <b>0.8</b>. On average cheating leaves the firm 2 − 0.8 = 1.2 million better off, so a profit-maximizing firm <b>breaks the rule</b>.</p><p>On the chart: the firm cheats whenever the dot is <b>below</b> the dashed line.</p>'},
+  {type:'num',unit:'',text:'What is the <b>minimum chance of being caught</b> that makes the firm comply? '+MUTED('(A number from 0 to 1.)'),ansText:'0.25 (1 in 4)',
+   check:v=>near(v,.25)?{ok:1}:(v>1||v<0)?{hint:'A chance is a number between 0 and 1. For example, 1 in 2 = 0.5.'}
+     :near(v,.1)?{hint:'That is today\'s chance, and at 0.1 the firm cheats.'}:{hint:'The firm complies when expected fine ≥ profit from cheating, i.e. when chance × 8 ≥ 2.'},
+   short:'Chance × 8 = 2 → chance = 2 ÷ 8 = <b>0.25</b> (1 in 4).',
+   long:'<p>The purple line shows the expected fine for <i>every</i> chance of being caught (8 × chance). Left of 0.25 the line is below the dashed line: cheating pays (red). Right of 0.25: complying pays (green).</p><p>At exactly 0.25 the firm is indifferent; we assume it then complies. To get there, the government must inspect <b>2.5 times</b> as often as today (0.1 → 0.25). This is <b>lever 1: more inspections</b>.</p>'},
+  {type:'slider',min:1,max:40,init:FINE,text:'Inspections are expensive, so the chance of being caught stays at <b>0.1</b>. What is the <b>minimum fine</b> that makes the firm comply? '+MUTED('Move the slider: a bigger fine makes the purple line steeper.'),ansText:'20 million DKK',
+   check:F=>F===20?{ok:1}:F<20?{hint:`With a fine of ${F} million, the expected fine is 0.1 × ${F} = ${fmt(.1*F)} million: still below the 2 million gain, so the firm cheats.`}
+     :{hint:'The firm complies, but a smaller fine would also work. We want the <b>minimum</b>.'},
+   onExplain:s=>{s.val=20;},
+   short:'We need 0.1 × fine ≥ 2 → fine ≥ 2 ÷ 0.1 = <b>20</b> million DKK.',
+   long:'<p>A bigger fine makes the purple line steeper and lifts the dot at 0.1 straight up. At 20 million the dot reaches the dashed line. This is <b>lever 2: a bigger fine</b>.</p><p>Two levers, same goal: inspect 2.5× more often (0.1 → 0.25) <i>or</i> raise the fine 2.5× (8 → 20). Inspections cost money, while announcing a bigger fine is cheap. But very large fines may seem unfair, or bankrupt small firms.</p><p class="small">US example: the EPA\'s $14.7bn settlement with Volkswagen (2016) after it cheated on emissions tests.</p>'}
+ ],
+ vis:(stg,S)=>plotFirm(stg,S.steps[3].val),
+ legend:stg=>[stg>=1&&'<span class="lg"><i style="background:#222"></i>expected fine today</span>',
+   stg>=2&&'<span class="lg"><i class="dsh"></i>profit from cheating</span>',
+   stg>=3&&'<span class="lg"><i class="ln"></i>expected fine at each chance</span>',
+   stg>=3&&'<span class="lg"><i class="sq" style="background:rgba(192,57,43,.25)"></i>cheating pays</span>',
+   stg>=3&&'<span class="lg"><i class="sq" style="background:rgba(46,139,87,.25)"></i>complying pays</span>'].filter(Boolean).join(''),
+ cap:(stg,S)=>{
+   if(stg<1)return '<p class="cap small">Answer the questions to build the picture.</p>';
+   if(stg<3)return '';
+   const F=S.steps[3].val,ef=.1*F,ok=ef>=GAIN-1e-9;
+   return `<p class="cap box">Fine <b>${F}</b> million, chance 0.1 → expected fine 0.1 × ${F} = <b>${fmt(ef)}</b> vs. profit from cheating <b>${GAIN}</b>: the firm <b style="color:${ok?'var(--green)':'var(--red)'}">${ok?'complies':'cheats'}</b>.</p>`;
+ }},
+
+/* ---------- 2 ---------- */
+{lvl:2, sitTitle:'The story', visTitle:'Payoff matrix',
+ defs:[DEF_GAME[0],DEF_GAME[1],['Pareto efficient','No other outcome makes someone better off without making anyone worse off.','e']],
+ sit:`<p>${aA('<b>Ann</b>')} and ${aB('<b>Bob</b>')} stole a famous painting, hid it, but were caught. The police put them in <b>separate rooms</b>, so they cannot talk. Each can <b>stay silent</b> or <b>snitch</b> (tell the police where the painting is and blame the other thief). They decide at the same time.</p>
+
+  <ul class="facts"><li><span>Both silent (the police got some evidence)</span><b>5 years each</b></li>
+  <li><span>One snitches, the other stays silent</span><b>snitch walks,<br>silent gets 15</b></li>
+
+  <li><span>Both snitch</span><b>10 years each</b></li></ul>
+  <p>Each thief cares only about <b>their own</b> time in prison. Utility is <b>4</b> if they stay out of prison, and every <b>5 years</b> in prison lowers it by <b>1</b>.</p>
+  <p class="small">So: free = 4, 5 years = 3, 10 years = 2, 15 years = 1.</p>`,
+ steps:[
+  {type:'radio',text:`What is ${aA('Ann')}'s <b>most preferred</b> outcome?`,opts:all4(PD),ans:'1,0',
+   hint:()=>'Which outcome gives Ann the fewest years in prison?',
+   short:`${P(PD,1,0)}: Ann snitches, Bob stays silent, and Ann goes free. Her payoff there is <b>4</b> (now in the matrix).`,
+   long:'<p>Each outcome is a <b>strategy profile</b>: (Ann\'s action, Bob\'s action). Ann\'s ranking: free (4) &gt; 5 years (3) &gt; 10 years (2) &gt; 15 years (1). She goes free only if she snitches while Bob stays silent.</p>'},
+  {type:'radio',text:`What is ${aB('Bob')}'s <b>least preferred</b> outcome?`,opts:all4(PD),ans:'1,0',
+   hint:()=>'Which outcome gives Bob the most years in prison?',
+   short:`${P(PD,1,0)}: Bob stays silent while Ann snitches, so Bob gets 15 years. His payoff there is <b>1</b>. Ann's favourite is Bob's worst!`,
+   long:'<p>The worst outcome gets the lowest payoff, 1. In this cell Ann gets 4 and Bob gets 1: written (4, 1).</p>'},
+  {type:'check',text:'Which outcomes are <b>Pareto efficient</b> for the two thieves? '+MUTED('(Select all that apply.)'),opts:[...all4(PD),{id:'none',label:'None of them'}],ans:['0,0','0,1','1,0'],
+   hint:sel=>sel.includes('1,1')?'Check (Snitch, Snitch): is there an outcome where <i>both</i> thieves spend less time in prison?'
+     :sel.includes('none')?'At least one outcome is efficient. Start with each thief\'s favourite.'
+     :'Hint: if an outcome is someone\'s favourite, moving away from it always hurts that person.',
+   short:'Every outcome except (Snitch, Snitch). All payoffs are now in the matrix.',
+   long:`<ul><li>${P(PD,0,0)} (3, 3): <b>efficient</b>. Any change sends someone to prison for longer.</li><li>${P(PD,1,0)} (4, 1): <b>efficient</b>. Ann goes free, so any change hurts Ann.</li><li>${P(PD,0,1)} (1, 4): <b>efficient</b>. Bob goes free, so any change hurts Bob.</li><li>${P(PD,1,1)} (2, 2): <b>not efficient</b>. If both stayed silent instead, each would get 5 years instead of 10: (3, 3) makes both better off.</li></ul><p>Efficient is not the same as fair: (4, 1) is efficient but very unequal. (And "efficient" here is only from the thieves' point of view, not society's!)</p>`},
+  {type:'radio',text:`Suppose ${aB('Bob')} <b>snitches</b>. What is ${aA('Ann')}'s <b>best response</b>?`,opts:[{id:'U',label:aA('Stay silent')},{id:'D',label:aA('Snitch')},{id:'p',label:P(PD,1,1)}],ans:'D',
+   hint:id=>id==='p'?NOTACT(P(PD,1,1),'Ann','Stay silent or Snitch'):'Bob\'s choice is fixed, so look only at Bob\'s Snitch column, and only at Ann\'s payoffs (the first numbers).',
+   extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Snitch</b>: Ann gets 10 years (payoff 2) instead of 15 years (payoff 1).',
+   long:'<p>Bob is fixed at Snitch, so only that column matters. Ann compares her own payoffs: Stay silent → 1 (15 years), Snitch → <b>2</b> (10 years). Best response: <b>Snitch</b>.</p>'},
+  {type:'radio',text:`Suppose ${aB('Bob')} <b>stays silent</b>. What is ${aA('Ann')}'s <b>best response</b>?`,opts:[{id:'U',label:aA('Stay silent')},{id:'D',label:aA('Snitch')},{id:'p',label:P(PD,1,0)}],ans:'D',
+   hint:id=>id==='p'?NOTACT(P(PD,1,0),'Ann','Stay silent or Snitch'):'Look only at Bob\'s Stay silent column, and only at Ann\'s payoffs (the first numbers).',
+   extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Snitch</b>: Ann goes free (payoff 4) instead of 5 years (payoff 3).',
+   long:'<p>Only Bob\'s Stay silent column matters. Ann compares: Stay silent → 3 (5 years), Snitch → <b>4</b> (free). Best response: <b>Snitch</b>.</p>'},
+  {type:'radio',text:`Suppose ${aA('Ann')} <b>stays silent</b>. What is ${aB('Bob')}'s <b>best response</b>?`,opts:[{id:'L',label:aB('Stay silent')},{id:'R',label:aB('Snitch')},{id:'p',label:P(PD,0,1)}],ans:'R',
+   hint:id=>id==='p'?NOTACT(P(PD,0,1),'Bob','Stay silent or Snitch'):'Look only at Ann\'s Stay silent row, and only at Bob\'s payoffs (the second numbers).',
+   extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Snitch</b>: Bob goes free (payoff 4) instead of 5 years (payoff 3).',
+   long:'<p>Only Ann\'s Stay silent row matters. Bob compares: Stay silent → 3, Snitch → <b>4</b>. Best response: <b>Snitch</b>.</p>'},
+  {type:'radio',text:`Suppose ${aA('Ann')} <b>snitches</b>. What is ${aB('Bob')}'s <b>best response</b>?`,opts:[{id:'L',label:aB('Stay silent')},{id:'R',label:aB('Snitch')},{id:'p',label:P(PD,1,1)}],ans:'R',
+   hint:id=>id==='p'?NOTACT(P(PD,1,1),'Bob','Stay silent or Snitch'):'Look only at Ann\'s Snitch row, and only at Bob\'s payoffs (the second numbers).',
+   extra:id=>id==='p'?DEF_SP:'',
+   short:'<b>Snitch</b>: Bob gets 10 years (payoff 2) instead of 15 years (payoff 1).',
+   long:'<p>Only Ann\'s Snitch row matters. Bob compares: Stay silent → 1, Snitch → <b>2</b>. Best response: <b>Snitch</b>.</p><p>Notice: snitching is best for each thief <i>whatever</i> the other does. Such a strategy is called a <b>dominant strategy</b>.</p>'}
+ ],
+ vis:stg=>{
+   const show=(r,c,p)=>stg>=3||(r===1&&c===0&&(p===0?stg>=1:stg>=2));
+   const ul=new Set();
+   if(stg>=4)ul.add('1,1,0'); if(stg>=5)ul.add('1,0,0'); if(stg>=6)ul.add('0,1,1'); if(stg>=7)ul.add('1,1,1');
+   const o={show,ul};
+   if(stg===3){o.grayCol=0;o.grayP=1;} if(stg===4){o.grayCol=1;o.grayP=1;}
+   if(stg===5){o.grayRow=1;o.grayP=0;} if(stg===6){o.grayRow=0;o.grayP=0;}
+   return matrix(PD,o);
+ },
+ cap:stg=>READP+({3:'<p class="cap box">Bob <b>snitches</b>: only his Snitch column matters, and only Ann\'s payoffs.</p>',
+   4:'<p class="cap box">Bob <b>stays silent</b>: only his Stay silent column matters, and only Ann\'s payoffs.</p>',
+   5:'<p class="cap box">Ann <b>stays silent</b>: only her Stay silent row matters, and only Bob\'s payoffs.</p>',
+   6:'<p class="cap box">Ann <b>snitches</b>: only her Snitch row matters, and only Bob\'s payoffs.</p>',
+   7:'<p class="cap">All best responses are underlined. Which cell has <i>both</i> payoffs underlined? (Next exercise.)</p>'}[stg]||'')},
+
+/* ---------- 3 ---------- */
+{lvl:2, sitTitle:'The game', visTitle:'Payoff matrix', defs:DEF_GAME,
+ sit:`<p>The same story as in Exercise 2: ${aA('Ann')} and ${aB('Bob')} each choose to stay silent or snitch. The <span style="color:var(--red);font-weight:700;text-decoration:underline">red underlined</span> payoffs are the best responses you found.</p>${RECIPE}`,
+ steps:[
+  {type:'radio',text:'Find the <b>Nash equilibrium</b> of this game.',opts:[pf(PD,0,0),pf(PD,0,1),pf(PD,1,1),{id:'pay',label:'(2, 2)'}],ans:'1,1',
+   hint:id=>id==='pay'?'<b>Not a strategy profile!</b> (2, 2) are the <i>payoffs</i>. An equilibrium says what each person <i>does</i>.'
+     :(()=>{const [r,c]=id.split(',').map(Number);return `Not an equilibrium: ${J(devs(PD,r,c))}. Look for the cell where <b>both</b> payoffs are underlined.`;})(),
+   extra:id=>id==='pay'?DEF_NE:'',
+   short:`${P(PD,1,1)}: both payoffs are underlined.`,
+   long:`<p>In ${P(PD,1,1)}, snitching is Ann's best response to Bob snitching, and snitching is Bob's best response to Ann snitching. Neither wants to change on their own.</p><ul>
+     <li>${P(PD,0,0)}: ${J(devs(PD,0,0))}.</li><li>${P(PD,0,1)}: ${J(devs(PD,0,1))}.</li><li>${P(PD,1,0)}: ${J(devs(PD,1,0))}.</li></ul>
+     <p>This is the original <b>prisoner's dilemma</b>: both thieves end up with 10 years, payoffs (2, 2). That is <b>not</b> Pareto efficient: if both stayed silent they would get only 5 years each, (3, 3). But each has a good individual reason to snitch.</p>`}
+ ],
+ vis:stg=>matrix(PD,{ul:PD.an.ul,hl:stg>=1?new Set(PD.an.ne):new Set()}),
+ cap:stg=>READP+(stg>=1?'<p class="cap">Purple cell = Nash equilibrium.</p>':'')},
+
+/* ---------- 4 ---------- */
+{lvl:3, sitTitle:'The game', visTitle:'Payoff matrix', defs:DEF_GAME,
+ sit:`<p>A new game. ${aA('A')} chooses Up or Down; ${aB('B')} chooses Left or Right, at the same time. This time, find the best responses yourself.</p>${RECIPE}`,
+ steps:[
+  {type:'check',text:'Find <b>all</b> Nash equilibria. '+MUTED('(Select all that apply.)'),opts:[...all4(G4),{id:'none',label:'No Nash equilibrium'}],ans:G4.an.ne,
+   hint:neHint(G4),
+   short:`${neCells(G4)}: in both cells, both payoffs are underlined.`,
+   long:brList(G4)+`<p>Cells where both payoffs are underlined: ${neCells(G4)}.</p><p>A game can have <b>more than one</b> equilibrium. The game alone cannot tell us which one happens: expectations and rules decide. Recall driving: everyone drives on the right in the US and Denmark, on the left in the UK.</p>`}
+ ],
+ vis:(stg,S)=>gameVis(G4,stg,S.scratch), cap:gameCap},
+
+/* ---------- 5 ---------- */
+{lvl:4, sitTitle:'The game', visTitle:'Payoff matrix', defs:DEF_GAME,
+ sit:`<p>Now each person has <b>three</b> actions. ${aA('A')}: Up, Middle or Down. ${aB('B')}: Left, Center or Right. The recipe still works: there are just more columns and rows to check.</p>${RECIPE}`,
+ steps:[
+  {type:'check',grid:true,text:'Find <b>all</b> Nash equilibria. '+MUTED('(Select all that apply.)'),opts:[...allCells(G5),{id:'none',label:'No Nash equilibrium',full:true}],ans:G5.an.ne,
+   hint:neHint(G5),
+   short:`${neCells(G5)}.`,
+   long:brList(G5)+`<p>Cells where both payoffs are underlined: ${neCells(G5)}.</p><p>Watch out for ${P(G5,2,2)} = (3, 3): it looks attractive, and A is best responding there, but ${J(devs(G5,2,2))}. One underline is not enough: an equilibrium needs <b>everyone</b> to be best responding.</p>`}
+ ],
+ vis:(stg,S)=>gameVis(G5,stg,S.scratch), cap:gameCap},
+
+/* ---------- 6 ---------- */
+{lvl:3, sitTitle:'The game', visTitle:'Payoff matrix', defs:DEF_GAME,
+ sit:`<p>One more 2 × 2 game. ${aA('A')} chooses Up or Down; ${aB('B')} chooses Left or Right, at the same time. Find the best responses yourself.</p>${RECIPE}<p class="small">Remember from class: a game can have one equilibrium, several, or none (of this simple kind).</p>`,
+ steps:[
+  {type:'check',text:'Find <b>all</b> Nash equilibria. '+MUTED('(Select all that apply.)'),opts:[...all4(G6),{id:'none',label:'No Nash equilibrium in pure strategies'}],ans:['none'],
+   hint:neHint(G6),
+   short:'There is <b>no Nash equilibrium in pure strategies</b>: in every cell, someone wants to switch.',
+   long:brList(G6)+`<ul>${['0,0','0,1','1,0','1,1'].map(k=>{const [r,c]=k.split(',').map(Number);return `<li>${P(G6,r,c)}: ${J(devs(G6,r,c))}.</li>`;}).join('')}</ul>
+     <p>No cell has both payoffs underlined. The switching goes round in a circle: A wants to <i>match</i> B, while B wants to <i>mismatch</i> A.</p>
+     <p>So far we only looked at <b>pure strategies</b>: each person picks one action for sure. But a person can also <b>randomize</b>, e.g. flip a coin to choose. That is called a <b>mixed strategy</b>.</p>
+     <p>This game <b>does</b> have an equilibrium in <b>mixed strategies</b>: each person picks each action with probability ½. Then neither can do better by switching, because the other cannot predict them. Think of a penalty kick in football: if the goalkeeper always dives left, the kicker always shoots right. So good players keep the other side guessing.</p>`}
+ ],
+ vis:(stg,S)=>gameVis(G6,stg,S.scratch),
+ cap:stg=>gameCap(stg)+(stg>=1?'<p class="cap small">No purple cell: no pure-strategy equilibrium.</p>':'')}
+];
+
+/* ================= state ================= */
+let cur=0;
+const S=[];
+const st=i=>S[i]||(S[i]={scratch:new Set(),steps:EX[i].steps.map(q=>({status:'open',val:q.type==='slider'?q.init:q.type==='num'?'':[],more:false,hint:'',extra:''}))});
+const done=s=>s.status==='correct'||s.status==='explained';
+function stage(i){let n=0;for(const s of st(i).steps){if(done(s))n++;else break;}return n;}
+
+/* ================= rendering ================= */
+function renderStatic(){
+  const ex=EX[cur];
+  $('#defs').innerHTML=ex.defs.map(([h,p,c])=>`<div class="card ${c}"><h3>${h}</h3><p>${p}</p></div>`).join('');
+  $('#sit').innerHTML=ex.sit; $('#sitTitle').textContent=ex.sitTitle; $('#visTitle').textContent=ex.visTitle;
+}
+function renderVis(){
+  const ex=EX[cur],stg=stage(cur),state=st(cur);
+  $('#vis').innerHTML=ex.vis(stg,state);
+  $('#legend').innerHTML=ex.legend?ex.legend(stg):'';
+  $('#viscap').innerHTML=ex.cap?ex.cap(stg,state):'';
+}
+function ansLabel(q){
+  if(q.ansText)return `<b>${q.ansText}</b>`;
+  const a=[].concat(q.ans);
+  return J(a.map(id=>'<b>'+q.opts.find(o=>o.id===id).label+'</b>'));
+}
+function renderQs(){
+  const ex=EX[cur],state=st(cur);let h='';
+  state.steps.forEach((s,k)=>{
+    const q=ex.steps[k],visible=k===0||done(state.steps[k-1]),fin=done(s),lock=fin||s.status==='wrong';
+    let body='';
+    if(q.type==='radio'||q.type==='check'){
+      const ans=new Set([].concat(q.ans)),sel=new Set(s.val);
+      body=`<div class="opts ${q.grid?'g3':''}">`+q.opts.map(o=>{
+        let cls='opt'+(o.full?' full':'');
+        if(lock)cls+=' dis';
+        if(fin){if(ans.has(o.id))cls+=' right';else if(sel.has(o.id))cls+=' miss';}
+        else if(s.status==='wrong'&&sel.has(o.id)&&q.type==='radio')cls+=' miss';
+        return `<label class="${cls}"><input type="${q.type==='radio'?'radio':'checkbox'}" name="q${cur}_${k}" value="${o.id}" ${sel.has(o.id)?'checked':''} ${lock?'disabled':''}><span>${o.label}</span></label>`;
+      }).join('')+'</div>';
+    }
+    if(q.type==='num'){
+      const v=s.status==='explained'?q.ansText.split(' ')[0]:s.val;
+      body=`<div class="numrow"><input type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.5" value="${String(v).replace(/"/g,'')}" ${lock?'disabled':''} data-num="${k}"><span>${q.unit}</span></div>`;
+    }
+    if(q.type==='slider'){
+      body=`<div class="slrow"><input type="range" min="${q.min}" max="${q.max}" step="1" value="${s.val}" data-sl="${k}" ${s.status==='wrong'?'disabled':''} aria-label="Fine if caught"><span class="val">Fine if caught: <b id="slv${k}">${s.val}</b> million DKK</span></div>`;
+    }
+    let act='',fb='';
+    if(s.status==='open'){
+      const empty=q.type==='slider'?false:q.type==='num'?!String(s.val).trim():!s.val.length;
+      act=`<button class="p" data-act="check" ${empty?'disabled':''}>Check answer</button>`;
+    }
+    if(s.status==='wrong')fb=`<div class="fb bad"><b>Not quite.</b> ${s.hint||''}${s.extra||''}<div class="row"><button class="p" data-act="again">Try again</button><button class="s" data-act="explain">Explain</button></div></div>`;
+    if(s.status==='correct')fb=`<div class="fb ok"><b>Correct!</b> ${q.short} ${s.more?`<div style="margin-top:6px">${q.long}</div>`:`<button class="lnk" data-act="more">Show detailed explanation</button>`}</div>`;
+    if(s.status==='explained')fb=`<div class="fb info"><b>Explanation.</b> The correct answer: ${ansLabel(q)}.${q.long}</div>`;
+    h+=`<div class="step ${visible?'':'locked'}" data-k="${k}"><div class="qhead"><span class="qnum">${k+1}</span><span>${q.text}</span></div>${body}${act}${fb}</div>`;
+  });
+  $('#qs').innerHTML=h;
+}
+
+/* ================= question events ================= */
+$('#qs').addEventListener('change',e=>{
+  const t=e.target;if(t.type!=='checkbox'&&t.type!=='radio')return;
+  const stepEl=t.closest('.step'),s=st(cur).steps[+stepEl.dataset.k];
+  if(t.type==='radio')s.val=[t.value];
+  else{
+    let sel=new Set(s.val);
+    if(t.value==='none')t.checked?sel=new Set(['none']):sel.delete('none');
+    else{t.checked?(sel.add(t.value),sel.delete('none')):sel.delete(t.value);}
+    s.val=[...sel];
+    stepEl.querySelectorAll('input').forEach(i=>i.checked=sel.has(i.value));
+  }
+  const b=stepEl.querySelector('[data-act=check]');if(b)b.disabled=!s.val.length;
+});
+$('#qs').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.num!==undefined){const s=st(cur).steps[+t.dataset.num];s.val=t.value;
+    const b=t.closest('.step').querySelector('[data-act=check]');if(b)b.disabled=!t.value.trim();}
+  if(t.dataset.sl!==undefined){const k=+t.dataset.sl,s=st(cur).steps[k];s.val=+t.value;
+    $('#slv'+k).textContent=t.value;renderVis();}
+});
+$('#qs').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.dataset.num!==undefined){const b=e.target.closest('.step').querySelector('[data-act=check]');if(b&&!b.disabled)b.click();}
+});
+$('#qs').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const k=+b.closest('.step').dataset.k,s=st(cur).steps[k],q=EX[cur].steps[k],act=b.dataset.act;
+  if(act==='check'){
+    s.hint='';s.extra='';
+    if(q.type==='num'||q.type==='slider'){
+      const v=q.type==='num'?parseNum(s.val):s.val;
+      if(isNaN(v)){s.status='wrong';s.hint='Please type a number, e.g. 0.5.';}
+      else{const r=q.check(v);s.status=r.ok?'correct':'wrong';s.hint=r.hint||'';}
+    } else if(q.type==='radio'){
+      const id=s.val[0];
+      s.status=id===q.ans?'correct':'wrong';
+      if(s.status==='wrong'){s.hint=q.hint?q.hint(id):'';s.extra=q.extra?q.extra(id):'';}
+    } else {
+      const a=new Set(q.ans),g=new Set(s.val);
+      s.status=(a.size===g.size&&[...a].every(x=>g.has(x)))?'correct':'wrong';
+      if(s.status==='wrong')s.hint=q.hint?q.hint(s.val):'';
+    }
+  }
+  if(act==='again'){s.status='open';if(q.type==='num')s.val='';else if(q.type!=='slider')s.val=[];}
+  if(act==='explain'){s.status='explained';if(q.onExplain)q.onExplain(s);}
+  if(act==='more')s.more=true;
+  refresh();
+  if(act==='again'){const inp=document.querySelector(`.step[data-k="${k}"] input[data-num]`);if(inp)inp.focus();}
+});
+/* scratch underlines (exercises 4–5) */
+$('#vis').addEventListener('click',e=>{
+  const t=e.target.closest('span.clk');if(!t)return;
+  const sc=st(cur).scratch,k=t.dataset.k;sc.has(k)?sc.delete(k):sc.add(k);renderVis();
+});
+$('#viscap').addEventListener('click',e=>{
+  if(e.target.closest('[data-act=clear]')){st(cur).scratch.clear();renderVis();}
+});
+
+/* ================= navigation ================= */
+function refresh(){
+  renderVis();renderQs();updateDots();
+  const n=EX[cur].steps.length;
+  $('#hint').textContent=stage(cur)===n?(n>1?'All questions done. Continue when ready.':'Done. Continue when ready.'):'';
+}
+function updateDots(){
+  document.querySelectorAll('#dots button').forEach((b,i)=>{b.classList.toggle('on',i===cur);b.classList.toggle('done',stage(i)===EX[i].steps.length);});
+  $('#meta').innerHTML=`Exercise ${cur+1} of ${EX.length} &nbsp;·&nbsp; Difficulty <span class="lvl">${'●'.repeat(EX[cur].lvl)}${'○'.repeat(5-EX[cur].lvl)}</span>`;
+  $('#prev').disabled=cur===0;$('#next').disabled=cur===EX.length-1;
+  $('#prev').style.opacity=cur===0?.4:1;$('#next').style.opacity=cur===EX.length-1?.4:1;
+}
+function go(i,scroll=true){
+  cur=Math.max(0,Math.min(EX.length-1,i));
+  history.replaceState(null,'','#ex'+(cur+1));
+  renderStatic();refresh();
+  if(scroll)window.scrollTo({top:document.querySelector('.topbar').offsetTop-10,behavior:'smooth'});
+}
+$('#dots').innerHTML=EX.map((e,i)=>`<button aria-label="Exercise ${i+1}">${i+1}</button>`).join('');
+$('#dots').addEventListener('click',e=>{const b=e.target.closest('button');if(b)go([...$('#dots').children].indexOf(b));});
+$('#prev').onclick=()=>go(cur-1);$('#next').onclick=()=>go(cur+1);
+(function init(){const m=/ex(\d+)/.exec(location.hash);go(m?+m[1]-1:0,false);})();
+</script>
+</body></html>
